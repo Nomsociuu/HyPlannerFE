@@ -23,6 +23,13 @@ import NotificationsScreen from "../screens/NotificationsScreen";
 
 // ===== IMPORT LẠI ICON USER =====
 import { Home, User, Heart, Bell } from "lucide-react-native";
+import TaskListScreen from "../screens/TaskListScreen";
+import CreateNewTaskScreen from "../screens/CreateNewTaskScreen";
+import EditTaskScreen from "../screens/EditTaskScreen";
+import AddMemberScreen from "../screens/AddMemberScreen";
+import AddWeddingInfo from "../screens/AddWeddingInfo";
+import JoinWeddingEvent from "../screens/JoinWeddingEvent";
+import { Member } from "../store/weddingEventSlice";
 
 const scheme = process.env.EXPO_PUBLIC_SCHEME;
 
@@ -33,9 +40,15 @@ export type RootStackParamList = {
     screen: string;
     params?: { token: string; user?: any };
   };
-  TodoList: undefined;
+  // TodoList: undefined;
   Profile: undefined;
   BeginScreen: undefined;
+  TaskList: undefined;
+  AddTask: { phaseId: string };
+  EditTask: { taskId: string };
+  AddMember: { existingMembers?: Member[], onSelect?: (selectedMembers: Member[]) => void }; // Thêm kiểu cho AddMember
+  AddWeddingInfo: undefined; //nếu role là người tạo
+  JoinWedding: undefined; //nếu role là người tham gia
 };
 
 // ===== CẬP NHẬT LẠI TYPE CHO TAB =====
@@ -186,7 +199,7 @@ const linking: LinkingOptions<RootStackParamList> = {
 // --- NAVIGATOR CHÍNH CỦA APP (GIỮ NGUYÊN NHƯ TRƯỚC) ---
 const AppNavigator = () => (
   <NavigationContainer linking={linking} fallback={<Text>Loading...</Text>}>
-    <Stack.Navigator initialRouteName="BeginScreen">
+    <Stack.Navigator initialRouteName="TaskList">
       <Stack.Screen
         name="BeginScreen"
         component={BeginScreen}
@@ -213,14 +226,44 @@ const AppNavigator = () => (
           },
         }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="TodoList"
         component={TodoListScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddTask"
+        component={CreateNewTaskScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EditTask"
+        component={EditTaskScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddMember"
+        component={AddMemberScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddWeddingInfo"
+        component={AddWeddingInfo}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="JoinWedding"
+        component={JoinWeddingEvent}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
