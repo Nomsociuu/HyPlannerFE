@@ -90,8 +90,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   title: {
+    fontFamily: "Agbalumo",
     fontSize: 36,
-    fontWeight: "bold",
+    // fontWeight: "bold",
     color: "#9e182b",
     marginBottom: 8,
     textAlign: "center",
