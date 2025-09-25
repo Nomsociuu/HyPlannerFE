@@ -34,12 +34,71 @@ import { deleteTask, markTaskCompleted } from '../service/taskService';
 import { getWeddingEvent, leaveWeddingEvent } from '../service/weddingEventService';
 import Hashids from 'hashids';
 import BudgetProgressBar from '../components/BudgetProgressBar';
+import { createGroupActivity, getGroupActivities } from '../service/groupActivityService';
+import { get } from 'axios';
+import { deleteActivity } from '../service/activityService';
+
+type ListFooterProps = {
+    modalVisible: boolean;
+    setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+    groupName: string;
+    setGroupName: React.Dispatch<React.SetStateAction<string>>;
+    handleAddGroupActivity: () => void;
+};
+const ListFooter = memo(({
+    modalVisible,
+    setModalVisible,
+    groupName,
+    setGroupName,
+    handleAddGroupActivity
+}: ListFooterProps) => {
+    return (
+        <>
+            <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addStageButton}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center' }}>
+                    <Entypo name="plus" size={24} />
+                    <Text style={styles.addStageButtonLabel}>Thêm nhóm ngân sách</Text>
+                </View>
+            </TouchableOpacity>
+            <Modal
+                visible={modalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Thêm nhóm ngân sách mới</Text>
+                        <TextInput
+                            placeholder="Tên nhóm ngân sách"
+                            value={groupName}
+                            onChangeText={setGroupName}
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 8,
+                                padding: 10,
+                                marginTop: 16,
+                            }}
+                        />
+                        <View style={[styles.modalButtonRow, { flexDirection: 'row', justifyContent: 'center' }]}>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.cancelButton, { flex: 1 }]}>
+                                <Text style={{ color: '#fff', textAlign: 'center' }}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleAddGroupActivity} style={[styles.addButton, { flex: 1 }]}>
+                                <Text style={{ color: '#fff', textAlign: 'center' }}>Thêm</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </>
+    )
+});
 
 export default function BudgetListScreen() {
     const [modalVisible, setModalVisible] = useState(false);
-    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+    const [groupName, setGroupName] = useState("");
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
     const [stages, setStages] = useState<any[]>([]);
@@ -54,8 +113,8 @@ export default function BudgetListScreen() {
     const [selectedTask, setSelectedTask] = useState<any>(null); // Task được chọn
     const [taskDetailModalVisible, setTaskDetailModalVisible] = useState(false); // Trạng thái hiển thị modal
     const dispatch = useDispatch<AppDispatch>();
-    const phases = useSelector(
-        (state: RootState) => state.phases.getPhases.phases
+    const groupActivities = useSelector(
+        (state: RootState) => state.groupActivities.getGroupActivities.groupActivities
     );
     // const phaseLoading = useSelector((state: RootState) => state.phases.getPhases.isLoading);
     const [loading, setLoading] = useState(false);
@@ -76,35 +135,34 @@ export default function BudgetListScreen() {
     const totalBudget = useSelector((state: RootState) => state.weddingEvent.getWeddingEvent.weddingEvent.budget);
     // Fetch phases từ API khi mount
     useEffect(() => {
-        const fetchPhases = async () => {
+        const fetchAllActivities = async () => {
             setLoading(true);
             try {
-                await getPhases(eventId, dispatch);
+                await getGroupActivities(eventId, dispatch);
             } catch (error) {
-                console.error("Error fetching phases:", error);
+                console.error("Error fetching group activities:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchPhases();
+        fetchAllActivities();
     }, [dispatch, eventId]);
 
     // Đồng bộ phases từ Redux sang stages để hiển thị
     useEffect(() => {
-        const newStages = phases.map((phase, idx) => ({
-            id: phase._id,
-            title: `Giai đoạn ${idx + 1}: ${formatDate(phase.phaseTimeStart)} - ${formatDate(phase.phaseTimeEnd)}`,
-            tasks: phase.tasks.map((task: any) => ({
-                id: task._id,
-                text: task.taskName,
-                completed: task.completed,
-                note: task.taskNote,
-                assignee: task.member,
-                expectedBudget: task.expectedBudget,
-                actualBudget: task.actualBudget,
+        const newStages = groupActivities.map((groupActivity, idx) => ({
+            id: groupActivity._id,
+            title: groupActivity.groupName,
+            activities: groupActivity.activities.map((activity: any) => ({
+                id: activity._id,
+                text: activity.activityName,
+                note: activity.activityNote,
+                expectedBudget: activity.expectedBudget,
+                actualBudget: activity.actualBudget,
+                payer: activity.payer,
             })),
-            totalExpectedBudget: phase.tasks.reduce((acc: number, task: any) => acc + (task.expectedBudget || 0), 0),
-            totalActualBudget: phase.tasks.reduce((acc: number, task: any) => acc + (task.actualBudget || 0), 0),
+            totalExpectedBudget: groupActivity.activities.reduce((acc: number, activity: any) => acc + (activity.expectedBudget || 0), 0),
+            totalActualBudget: groupActivity.activities.reduce((acc: number, activity: any) => acc + (activity.actualBudget || 0), 0),
         }));
         setStages(newStages);
         setExpandedAccordions(prev => {
@@ -113,7 +171,7 @@ export default function BudgetListScreen() {
             if (newStages.length > 0) return [newStages[0].id];
             return [];
         });
-    }, [phases]);
+    }, [groupActivities]);
 
     function formatDate(dateStr: string) {
         const date = new Date(dateStr);
@@ -123,21 +181,21 @@ export default function BudgetListScreen() {
     }
 
     // Tính toán ngân sách dự kiến và thực tế
-    const totalExpectedBudget = phases.reduce(
-        (acc, phase) =>
+    const totalExpectedBudget = groupActivities.reduce(
+        (acc, groupActivity) =>
             acc +
-            phase.tasks.reduce(
-                (taskAcc: number, task: any) => taskAcc + (task.expectedBudget || 0),
+            groupActivity.activities.reduce(
+                (activityAcc: number, activity: any) => activityAcc + (activity.expectedBudget || 0),
                 0
             ),
         0
     );
 
-    const totalActualBudget = phases.reduce(
-        (acc, phase) =>
+    const totalActualBudget = groupActivities.reduce(
+        (acc, groupActivity) =>
             acc +
-            phase.tasks.reduce(
-                (taskAcc: number, task: any) => taskAcc + (task.actualBudget || 0),
+            groupActivity.activities.reduce(
+                (activityAcc: number, activity: any) => activityAcc + (activity.actualBudget || 0),
                 0
             ),
         0
@@ -150,19 +208,35 @@ export default function BudgetListScreen() {
     }
 
     // Xử lý sự kiện chọn công việc
-    const handleTaskToggle = async (taskId: string) => {
-        let currentCompleted = false;
-        for (const stage of stages) {
-            const found = stage.tasks.find((task: any) => task.id === taskId);
-            if (found) {
-                currentCompleted = found.completed;
-                break;
-            }
+    // const handleTaskToggle = async (taskId: string) => {
+    //     let currentCompleted = false;
+    //     for (const stage of stages) {
+    //         const found = stage.tasks.find((task: any) => task.id === taskId);
+    //         if (found) {
+    //             currentCompleted = found.completed;
+    //             break;
+    //         }
+    //     }
+    //     await markTaskCompleted(taskId, !currentCompleted, dispatch);
+    //     await getPhases(eventId, dispatch);
+    // }
+    const handleAddGroupActivity = async () => {
+        if (!groupName.trim()) return;
+        try {
+            await createGroupActivity(
+                eventId,
+                groupName,
+                dispatch
+            );
+            setModalVisible(false);
+            setGroupName("");
+            // Sau khi tạo thành công, tự động reload danh sách phases
+            await getGroupActivities(eventId, dispatch);
+        } catch (error) {
+            // Xử lý lỗi nếu cần
+            console.error('Error creating phase:', error);
         }
-        await markTaskCompleted(taskId, !currentCompleted, dispatch);
-        await getPhases(eventId, dispatch);
-    }
-
+    };
     const renderHiddenItem = (data: any, rowMap: any) => {
         const showConfirm = (taskId: string) => {
             setSelectedTaskId(taskId);
@@ -171,8 +245,8 @@ export default function BudgetListScreen() {
 
         const handleConfirmDelete = async () => {
             if (selectedTaskId) {
-                await deleteTask(selectedTaskId, dispatch);
-                await getPhases(eventId, dispatch);
+                await deleteActivity(selectedTaskId, dispatch);
+                await getGroupActivities(eventId, dispatch);
                 setConfirmVisible(false);
                 setSelectedTaskId(null);
             }
@@ -182,7 +256,7 @@ export default function BudgetListScreen() {
             <View style={styles.rowBack}>
                 <TouchableOpacity
                     style={[styles.backRightBtn, styles.backRightBtnLeft]}
-                    onPress={() => navigation.navigate('EditTask', { taskId: data.item.id })}
+                    onPress={() => navigation.navigate('EditBudget', { activityId: data.item.id })}
                 >
                     <Text style={styles.backTextWhite}>Sửa</Text>
                 </TouchableOpacity>
@@ -196,7 +270,7 @@ export default function BudgetListScreen() {
                     <Dialog visible={confirmVisible} onDismiss={() => setConfirmVisible(false)}>
                         <Dialog.Title>Xác nhận xóa</Dialog.Title>
                         <Dialog.Content>
-                            <Text>Bạn có chắc chắn muốn xóa công việc này?</Text>
+                            <Text>Bạn có chắc chắn muốn xóa ngân sách này?</Text>
                         </Dialog.Content>
                         <Dialog.Actions>
                             {/* có thể thêm màu vào button sau */}
@@ -231,14 +305,6 @@ export default function BudgetListScreen() {
                     ]}
                     style={{ paddingLeft: responsiveWidth(8) }}
                     onPress={() => handleTaskDetail(task)}
-                    left={() => (
-                        <RadioButton.Android
-                            value={task.id}
-                            status={task.completed ? 'checked' : 'unchecked'}
-                            onPress={() => handleTaskToggle(task.id)}
-                            color="#E9D0CB"
-                        />
-                    )}
                 />
             </View>
         )
@@ -254,22 +320,17 @@ export default function BudgetListScreen() {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Chi tiết công việc</Text>
+                        <Text style={styles.modalTitle}>Chi tiết ngân sách</Text>
                         {selectedTask && (
                             <>
                                 <Text style={styles.modalText}>
-                                    <Text style={{ fontWeight: "bold" }}>Tên công việc: </Text>
+                                    <Text style={{ fontWeight: "bold" }}>Tên ngân sách: </Text>
                                     {selectedTask.text}
                                 </Text>
                                 {/* Ghi chú */}
                                 <Text style={styles.modalText}>
                                     <Text style={{ fontWeight: "bold" }}>Ghi chú: </Text>
                                     {selectedTask.note || "Không có ghi chú"}
-                                </Text>
-                                {/* Trạng thái */}
-                                <Text style={styles.modalText}>
-                                    <Text style={{ fontWeight: "bold" }}>Trạng thái: </Text>
-                                    {selectedTask.completed ? "Đã hoàn thành" : "Chưa hoàn thành"}
                                 </Text>
                                 {/* Ngân sách dự kiến */}
                                 <Text style={styles.modalText}>
@@ -281,30 +342,11 @@ export default function BudgetListScreen() {
                                     <Text style={{ fontWeight: "bold" }}>Ngân sách thực tế: </Text>
                                     {selectedTask.actualBudget ? selectedTask.actualBudget.toLocaleString() + " VNĐ" : "Chưa có"}
                                 </Text>
-                                {/* Người thực hiện */}
+                                {/* Người chi trả */}
                                 <Text style={styles.modalText}>
-                                    <Text style={{ fontWeight: "bold" }}>Người thực hiện:</Text>
+                                    <Text style={{ fontWeight: "bold" }}>Người chi trả: </Text>
+                                    {selectedTask.payer === "bride" ? "Cô dâu" : selectedTask.payer === "groom" ? "Chú rể" : "Quỹ chung"}
                                 </Text>
-                                {selectedTask.assignee.length > 0 ? (
-                                    <FlatList
-                                        data={selectedTask.assignee}
-                                        keyExtractor={(item) => item._id}
-                                        renderItem={({ item }) => (
-                                            <View style={styles.assigneeContainer}>
-                                                <Image
-                                                    source={{ uri: item.picture }}
-                                                    style={styles.assigneeAvatar}
-                                                />
-                                                <View>
-                                                    <Text style={styles.assigneeName}>{item.fullName}</Text>
-                                                    <Text style={styles.assigneeEmail}>{item.email}</Text>
-                                                </View>
-                                            </View>
-                                        )}
-                                    />
-                                ) : (
-                                    <Text style={styles.modalText}>Không có người thực hiện</Text>
-                                )}
                             </>
                         )}
                         <View style={styles.modalButtonRow}>
@@ -355,7 +397,7 @@ export default function BudgetListScreen() {
                 descriptionStyle={styles.accordionDescription}
             >
                 <SwipeListView
-                    data={stage.tasks}
+                    data={stage.activities}
                     renderItem={(data, rowMap) => renderTaskItem(data, rowMap, stage.id)}
                     renderHiddenItem={renderHiddenItem}
                     rightOpenValue={-150}
@@ -367,11 +409,11 @@ export default function BudgetListScreen() {
                 <TouchableOpacity
                     style={{ backgroundColor: '#FFF' }}
                     onPress={() =>
-                        navigation.navigate('AddTask', { phaseId: stage.id })
+                        navigation.navigate('AddBudget', { groupActivityId: stage.id })
                     }>
                     <View style={styles.addTaskButton}>
                         <Entypo name="plus" size={24} />
-                        <Text style={styles.addTaskButtonLabel}>Thêm công việc</Text>
+                        <Text style={styles.addTaskButtonLabel}>Thêm ngân sách</Text>
                     </View>
                 </TouchableOpacity>
             </List.Accordion>
@@ -385,7 +427,7 @@ export default function BudgetListScreen() {
                     style={styles.phaseEmptyImage}
                     resizeMode="cover"
                 />
-                <Text style={styles.phaseEmptyText}>Không có giai đoạn nào.{"\n"}Bạn hãy thêm giai đoạn mới nhé !</Text>
+                <Text style={styles.phaseEmptyText}>Không có nhóm ngân sách nào.{"\n"}Bạn hãy thêm nhóm ngân sách mới nhé !</Text>
             </View>
         )
     }
@@ -403,110 +445,68 @@ export default function BudgetListScreen() {
         </>
     ));
 
-    const ListFooter = () => {
-        const handleAddStage = async () => {
-            if (!startDate || !endDate) return;
-            try {
-                await createPhase(
-                    eventId,
-                    {
-                        phaseTimeStart: startDate.toISOString(),
-                        phaseTimeEnd: endDate.toISOString(),
-                    },
-                    dispatch
-                );
-                setModalVisible(false);
-                setStartDate(undefined);
-                setEndDate(undefined);
-                // Sau khi tạo thành công, tự động reload danh sách phases
-                await getPhases(eventId, dispatch);
-            } catch (error) {
-                // Xử lý lỗi nếu cần
-                console.error('Error creating phase:', error);
-            }
-        };
-        // Lấy ngày kết thúc của phase trước đó (nếu có)
-        const lastPhaseEndDate = phases.length > 0
-            ? new Date(phases[phases.length - 1].phaseTimeEnd)
-            : new Date();
-        return (
-            <>
-                <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addStageButton}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center' }}>
-                        <Entypo name="plus" size={24} />
-                        <Text style={styles.addStageButtonLabel}>Thêm giai đoạn</Text>
-                    </View>
-                </TouchableOpacity>
-                <Modal
-                    visible={modalVisible}
-                    transparent
-                    animationType="slide"
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContainer}>
-                            <Text style={styles.modalTitle}>Thêm giai đoạn mới</Text>
-                            <TouchableOpacity
-                                onPress={() => setShowStartPicker(true)}
-                                style={styles.datePickerButton}
-                            >
-                                <Text>
-                                    {startDate
-                                        ? `Ngày bắt đầu: ${formatDate(startDate.toISOString())}`
-                                        : 'Chọn ngày bắt đầu'}
-                                </Text>
-                            </TouchableOpacity>
-                            {showStartPicker && (
-                                <DateTimePicker
-                                    value={startDate || lastPhaseEndDate}
-                                    mode="date"
-                                    display="default"
-                                    minimumDate={lastPhaseEndDate}
-                                    onChange={(_, date) => {
-                                        setShowStartPicker(false);
-                                        if (date) setStartDate(date);
-                                    }}
-                                />
-                            )}
+    // const ListFooter = () => {
+    //     const handleAddGroupActivity = async () => {
+    //         if (!groupName.trim()) return;
+    //         try {
+    //             await createGroupActivity(
+    //                 eventId,
+    //                 groupName,
+    //                 dispatch
+    //             );
+    //             setModalVisible(false);
+    //             setGroupName("");
+    //             // Sau khi tạo thành công, tự động reload danh sách phases
+    //             await getGroupActivities(eventId, dispatch);
+    //         } catch (error) {
+    //             // Xử lý lỗi nếu cần
+    //             console.error('Error creating phase:', error);
+    //         }
+    //     };
 
-                            <TouchableOpacity
-                                onPress={() => setShowEndPicker(true)}
-                                style={styles.datePickerButton}
-                            >
-                                <Text>
-                                    {endDate
-                                        ? `Ngày kết thúc: ${formatDate(endDate.toISOString())}`
-                                        : 'Chọn ngày kết thúc'}
-                                </Text>
-                            </TouchableOpacity>
-                            {showEndPicker && (
-                                <DateTimePicker
-                                    //lastPhaseEndDate + 2 days at value
-                                    value={endDate || new Date(lastPhaseEndDate.getTime() + 2 * 24 * 60 * 60 * 1000)}
-                                    mode="date"
-                                    display="default"
-                                    minimumDate={startDate || lastPhaseEndDate}
-                                    onChange={(_, date) => {
-                                        setShowEndPicker(false);
-                                        if (date) setEndDate(date);
-                                    }}
-                                />
-                            )}
-
-                            <View style={[styles.modalButtonRow, { flexDirection: 'row', justifyContent: 'center' }]}>
-                                <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.cancelButton, { flex: 1 }]}>
-                                    <Text style={{ color: '#fff', textAlign: 'center' }}>Hủy</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={handleAddStage} style={[styles.addButton, { flex: 1 }]}>
-                                    <Text style={{ color: '#fff', textAlign: 'center' }}>Thêm</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-            </>
-        )
-    }
+    //     return (
+    //         <>
+    //             <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addStageButton}>
+    //                 <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center' }}>
+    //                     <Entypo name="plus" size={24} />
+    //                     <Text style={styles.addStageButtonLabel}>Thêm nhóm ngân sách</Text>
+    //                 </View>
+    //             </TouchableOpacity>
+    //             <Modal
+    //                 visible={modalVisible}
+    //                 transparent
+    //                 animationType="slide"
+    //                 onRequestClose={() => setModalVisible(false)}
+    //             >
+    //                 <View style={styles.modalOverlay}>
+    //                     <View style={styles.modalContainer}>
+    //                         <Text style={styles.modalTitle}>Thêm nhóm ngân sách mới</Text>
+    //                         <TextInput
+    //                             placeholder="Tên nhóm ngân sách"
+    //                             value={groupName}
+    //                             onChangeText={setGroupName}
+    //                             style={{
+    //                                 borderWidth: 1,
+    //                                 borderColor: '#ccc',
+    //                                 borderRadius: 8,
+    //                                 padding: 10,
+    //                                 marginTop: 16,
+    //                             }}
+    //                         />
+    //                         <View style={[styles.modalButtonRow, { flexDirection: 'row', justifyContent: 'center' }]}>
+    //                             <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.cancelButton, { flex: 1 }]}>
+    //                                 <Text style={{ color: '#fff', textAlign: 'center' }}>Hủy</Text>
+    //                             </TouchableOpacity>
+    //                             <TouchableOpacity onPress={handleAddGroupActivity} style={[styles.addButton, { flex: 1 }]}>
+    //                                 <Text style={{ color: '#fff', textAlign: 'center' }}>Thêm</Text>
+    //                             </TouchableOpacity>
+    //                         </View>
+    //                     </View>
+    //                 </View>
+    //             </Modal>
+    //         </>
+    //     )
+    // }
 
     return (
         <View style={styles.safeArea}>
@@ -524,7 +524,15 @@ export default function BudgetListScreen() {
                     renderItem={renderStage}
                     keyExtractor={(item) => item.id}
                     ListHeaderComponent={ListHeader}
-                    ListFooterComponent={ListFooter}
+                    ListFooterComponent={
+                        <ListFooter
+                            modalVisible={modalVisible}
+                            setModalVisible={setModalVisible}
+                            groupName={groupName}
+                            setGroupName={setGroupName}
+                            handleAddGroupActivity={handleAddGroupActivity}
+                        />
+                    }
                     contentContainerStyle={styles.contentContainer}
                     ListEmptyComponent={PhaseEmpty}
                 />

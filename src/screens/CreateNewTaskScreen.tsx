@@ -37,9 +37,9 @@ export default function CreateNewTaskScreen() {
     const [taskName, setTaskName] = useState('');
     const [notes, setNotes] = useState('');
     const [taskNameError, setTaskNameError] = useState('');
-    const [expectedBudget, setExpectedBudget] = useState<number | null>(null); // Giá trị ban đầu là null
-    const [actualBudget, setActualBudget] = useState<number | null>(null);
-    const [budgetError, setBudgetError] = useState<string>(""); // Lưu thông báo lỗi    
+    // const [expectedBudget, setExpectedBudget] = useState<number | null>(null); // Giá trị ban đầu là null
+    // const [actualBudget, setActualBudget] = useState<number | null>(null);
+    // const [budgetError, setBudgetError] = useState<string>(""); // Lưu thông báo lỗi    
 
     const [members, setMembers] = useState<Member[]>([]);
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -48,8 +48,8 @@ export default function CreateNewTaskScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'AddTask'>>();
     const { phaseId } = route.params;
     const eventId = "68c29283931d7e65bd3ad689"; // lưu ý đây là fix cứng tạm thời sau khi hoàn thành login và chọn sự kiện
-    const userId = "6892b8a2aa0f1640e5c173f2"; //fix cứng tạm thời
-    const creatorId = useSelector((state: RootState) => state.weddingEvent.getWeddingEvent.weddingEvent.creatorId);
+    // const userId = "6892b8a2aa0f1640e5c173f2"; //fix cứng tạm thời
+    // const creatorId = useSelector((state: RootState) => state.weddingEvent.getWeddingEvent.weddingEvent.creatorId);
 
     const handleCreateTask = async () => {
         try {
@@ -62,8 +62,8 @@ export default function CreateNewTaskScreen() {
                 taskName,
                 taskNote: notes,
                 member: members.map(m => m._id),
-                expectedBudget: expectedBudget === null ? 0 : expectedBudget, // Nếu expectedBudget là null, gửi 0
-                actualBudget: actualBudget === null ? 0 : actualBudget, // Nếu actualBudget là null, gửi 0
+                // expectedBudget: expectedBudget === null ? 0 : expectedBudget, // Nếu expectedBudget là null, gửi 0
+                // actualBudget: actualBudget === null ? 0 : actualBudget, // Nếu actualBudget là null, gửi 0
             };
             await createTask(phaseId, taskData, dispatch);
             await getPhases(eventId, dispatch);
@@ -76,9 +76,9 @@ export default function CreateNewTaskScreen() {
     const handleSelectMembers = useCallback((selectedMembers: Member[]) => {
         setMembers(selectedMembers); // Cập nhật danh sách thành viên
     }, []);
-    const formatNumber = (value: number): string => {
-        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    };
+    // const formatNumber = (value: number): string => {
+    //     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    // };
     return (
         <View style={styles.safeArea}>
             <KeyboardAvoidingView
@@ -147,11 +147,10 @@ export default function CreateNewTaskScreen() {
                                     }}
                                 />
                             </View>
-                            {userId === creatorId && (
+                            {/* {userId === creatorId && (
                                 <>
                                     <View style={styles.section}>
                                         <View style={styles.sectionHeader}>
-                                            {/* <Icon source="message-text" color="#F9CBD6" size={24} /> */}
                                             <FontAwesome5 name="coins" color="#F9CBD6" size={24} />
                                             <Text style={styles.sectionTitle}>Ngân sách dự kiến</Text>
                                         </View>
@@ -161,11 +160,11 @@ export default function CreateNewTaskScreen() {
                                             value={expectedBudget !== null ? formatNumber(expectedBudget) : ""}
                                             onChangeText={(value) => {
                                                 if (value === "") {
-                                                    setExpectedBudget(null); // Nếu giá trị rỗng, đặt lại thành null
+                                                    setExpectedBudget(null); 
                                                 } else {
-                                                    const numericValue = parseInt(value.replace(/\./g, ""), 10); // Loại bỏ dấu chấm
+                                                    const numericValue = parseInt(value.replace(/\./g, ""), 10); 
                                                     if (!isNaN(numericValue)) {
-                                                        setExpectedBudget(numericValue); // Lưu giá trị thực (không có dấu chấm)
+                                                        setExpectedBudget(numericValue); 
                                                     }
                                                 }
                                             }}
@@ -194,11 +193,11 @@ export default function CreateNewTaskScreen() {
                                             value={actualBudget !== null ? formatNumber(actualBudget) : ""}
                                             onChangeText={(value) => {
                                                 if (value === "") {
-                                                    setActualBudget(null); // Nếu giá trị rỗng, đặt lại thành null
+                                                    setActualBudget(null);
                                                 } else {
-                                                    const numericValue = parseInt(value.replace(/\./g, ""), 10); // Loại bỏ dấu chấm
+                                                    const numericValue = parseInt(value.replace(/\./g, ""), 10); 
                                                     if (!isNaN(numericValue)) {
-                                                        setActualBudget(numericValue); // Lưu giá trị thực (không có dấu chấm)
+                                                        setActualBudget(numericValue); 
                                                     }
                                                 }
                                             }}
@@ -213,7 +212,7 @@ export default function CreateNewTaskScreen() {
                                         />
                                     </View>
                                 </>
-                            )}
+                            )} */}
 
                             {/* Phần Thành viên đảm nhận */}
                             <View style={styles.section}>
