@@ -46,7 +46,6 @@ import {
   createGroupActivity,
   getGroupActivities,
 } from "../service/groupActivityService";
-import { get } from "axios";
 import { deleteActivity } from "../service/activityService";
 import { selectCurrentUser } from "../store/authSlice";
 
@@ -567,35 +566,37 @@ export default function BudgetListScreen() {
     </>
   ));
 
-  return (
-    <View style={styles.safeArea}>
-      <BudgetListAppbar onBack={() => navigation.goBack()} />
-      <RenderTaskDetailModal />
-      {loading ? (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#D95D74" />
-        </View>
-      ) : (
-        <FlatList
-          data={stages}
-          renderItem={renderStage}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={ListHeader}
-          ListFooterComponent={
-            <ListFooter
-              modalVisible={modalVisible}
-              setModalVisible={setModalVisible}
-              groupName={groupName}
-              setGroupName={setGroupName}
-              handleAddGroupActivity={handleAddGroupActivity}
-              loading={actionLoading}
+    return (
+        <View style={styles.safeArea}>
+            <BudgetListAppbar
+                onBack={() => navigation.goBack()}
             />
-          }
-          contentContainerStyle={styles.contentContainer}
-          ListEmptyComponent={PhaseEmpty}
-        />
-      )}
-    </View>
+            <RenderTaskDetailModal />
+            {loading || groupActivities.length === 0 ? (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#D95D74" />
+                </View>
+            ) : (
+                <FlatList
+                    data={stages}
+                    renderItem={renderStage}
+                    keyExtractor={(item) => item.id}
+                    ListHeaderComponent={ListHeader}
+                    ListFooterComponent={
+                        <ListFooter
+                            modalVisible={modalVisible}
+                            setModalVisible={setModalVisible}
+                            groupName={groupName}
+                            setGroupName={setGroupName}
+                            handleAddGroupActivity={handleAddGroupActivity}
+                            loading={actionLoading}
+                        />
+                    }
+                    contentContainerStyle={styles.contentContainer}
+                    ListEmptyComponent={PhaseEmpty}
+                />
+            )}
+        </View>
   );
 }
 
