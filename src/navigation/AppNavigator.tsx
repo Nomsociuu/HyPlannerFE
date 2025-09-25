@@ -1,3 +1,4 @@
+// --- IMPORTS GIỐNG BẢN TRÊN ---
 import { useState, useEffect } from "react";
 import { Text, View, Image, StyleSheet, TouchableOpacity } from "react-native";
 import {
@@ -11,7 +12,6 @@ import {
   type StackNavigationProp,
 } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../store/authSlice";
 
@@ -27,7 +27,6 @@ import InviteOrCreateScreen from "../screens/InviteOrCreateScreen";
 import HomeScreen from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import MoodBoardsScreen from "../screens/MoodBoardsScreen";
-import TodoListScreen from "../screens/TodoListScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 
 // ===== IMPORT LẠI ICON USER =====
@@ -43,6 +42,21 @@ import BudgetListScreen from "../screens/BudgetListScreen";
 import CreateNewBudgetScreen from "../screens/CreateNewBudgetScreen";
 import EditBudgetScreen from "../screens/EditBudgetScreen";
 
+// ===== THÊM MÀN HÌNH MỚI (giữ format cũ) =====
+import RoleSelectionScreen from "../screens/RoleSelectionScreen";
+import ChooseStyleScreen from "../screens/ChooseStyleScreen";
+import WeddingDressScreen from "../screens/WeddingDressScreen";
+import WeddingMaterialScreen from "../screens/WeddingMaterialScreen";
+import WeddingNecklineScreen from "../screens/WeddingNecklineScreen";
+import WeddingDetailScreen from "../screens/WeddingDetailScreen";
+import AccessoriesScreen from "../screens/AccessoriesScreen";
+import WeddingFlowersScreen from "../screens/WeddingFlowersScreen";
+import AccessoriesJewelryScreen from "../screens/AccessoriesJewelryScreen";
+import AccessoriesHairClipScreen from "../screens/AccessoriesHairClipScreen";
+import AccessoriesCrownScreen from "../screens/AccessoriesCrownScreen";
+import AlbumScreen from "../screens/AlbumScreen";
+import AlbumDetailScreen from "../screens/AlbumDetailScreen";
+
 const scheme = process.env.EXPO_PUBLIC_SCHEME;
 
 // --- ĐỊNH NGHĨA TYPE (GIỮ NGUYÊN NHƯ TRƯỚC) ---
@@ -55,18 +69,32 @@ export type RootStackParamList = {
   PasswordUpdated: undefined;
   InviteOrCreate: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
-  // TodoList: undefined;
   Profile: undefined;
   BeginScreen: undefined;
   TaskList: { eventId: string };
   BudgetList: undefined;
-  AddTask: { phaseId: string, eventId: string };
-  EditTask: { taskId: string, eventId: string };
-  AddBudget: { groupActivityId: string, eventId: string };
-  EditBudget: { activityId: string, eventId: string };
-  AddMember: { existingMembers?: Member[], onSelect?: (selectedMembers: Member[]) => void }; // Thêm kiểu cho AddMember
-  AddWeddingInfo: undefined; //nếu role là người tạo
-  JoinWedding: undefined; //nếu role là người tham gia
+  AddTask: { phaseId: string; eventId: string };
+  EditTask: { taskId: string; eventId: string };
+  AddBudget: { groupActivityId: string; eventId: string };
+  EditBudget: { activityId: string; eventId: string };
+  AddMember: { existingMembers?: Member[]; onSelect?: (selectedMembers: Member[]) => void };
+  AddWeddingInfo: undefined;
+  JoinWedding: undefined;
+
+  // ===== THÊM TYPE MÀN HÌNH MỚI =====
+  RoleSelection: undefined;
+  ChooseStyle: undefined;
+  WeddingDress: undefined;
+  Accessories: undefined;
+  WeddingMaterial: undefined;
+  WeddingNeckline: undefined;
+  WeddingDetail: undefined;
+  WeddingFlowers: undefined;
+  AccessoriesJewelry: undefined;
+  AccessoriesHairClip: undefined;
+  AccessoriesCrown: undefined;
+  Album: undefined;
+  AlbumDetail: { album: any };
 };
 
 // ===== CẬP NHẬT LẠI TYPE CHO TAB =====
@@ -88,10 +116,8 @@ const DummyComponent = () => null;
 
 // --- COMPONENT HEADER AVATAR (GIỮ NGUYÊN) ---
 const HeaderAvatar = () => {
-  const user = useSelector(selectCurrentUser); // <-- SỬA: Lấy user từ Redux
+  const user = useSelector(selectCurrentUser); // <-- Lấy user từ Redux
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
-  // XÓA BỎ HOÀN TOÀN useState VÀ useEffect Ở ĐÂY
 
   const navigateToProfile = () => {
     navigation.navigate("Profile");
@@ -112,21 +138,17 @@ const HeaderAvatar = () => {
   );
 };
 
-// --- COMPONENT TAB NAVIGATOR (CẬP NHẬT QUAN TRỌNG) ---
+// --- COMPONENT TAB NAVIGATOR (GIỮ FORMAT BẢN TRÊN) ---
 const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size, focused }) => {
           const iconSize = focused ? 26 : 22;
-          if (route.name === "Home")
-            return <Home color={color} size={iconSize} />;
-          if (route.name === "Notifications")
-            return <Bell color={color} size={iconSize} />;
-          if (route.name === "MoodBoard")
-            return <Heart color={color} size={iconSize} />;
-          if (route.name === "ProfileTab")
-            return <User color={color} size={iconSize} />;
+          if (route.name === "Home") return <Home color={color} size={iconSize} />;
+          if (route.name === "Notifications") return <Bell color={color} size={iconSize} />;
+          if (route.name === "MoodBoard") return <Heart color={color} size={iconSize} />;
+          if (route.name === "ProfileTab") return <User color={color} size={iconSize} />;
           return null;
         },
         tabBarActiveTintColor: "#ff6b9d",
@@ -141,13 +163,10 @@ const MainTabNavigator = () => {
           backgroundColor: "#ffffff",
           borderTopWidth: 0,
           shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: -2,
-          },
-          shadowOpacity: 0.05, // Lowered for less intensity
-          shadowRadius: 2, // Reduced for a tighter shadow
-          elevation: 5, // Corresponding reduction for Android
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 2,
+          elevation: 5,
           height: 85,
           paddingTop: 8,
           paddingBottom: 8,
@@ -161,9 +180,7 @@ const MainTabNavigator = () => {
           marginHorizontal: 4,
           backgroundColor: "transparent",
         },
-        tabBarIconStyle: {
-          marginBottom: 2,
-        },
+        tabBarIconStyle: { marginBottom: 2 },
         headerShown: false,
       })}
     >
@@ -174,26 +191,28 @@ const MainTabNavigator = () => {
       />
       <Tab.Screen
         name="MoodBoard"
-        component={MoodBoardsScreen}
+        component={DummyComponent}
         options={{ tabBarLabel: "Bảng tâm trạng" }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.getParent()?.navigate("Album");
+          },
+        })}
       />
       <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{ tabBarLabel: "Thông báo" }}
       />
-      {/* ===== THÊM LẠI TAB HỒ SƠ VỚI LISTENER ===== */}
+      {/* ===== TAB HỒ SƠ GIỐNG BẢN TRÊN ===== */}
       <Tab.Screen
         name="ProfileTab"
         component={DummyComponent} // Sử dụng component rỗng
-        options={{
-          tabBarLabel: "Hồ sơ",
-        }}
+        options={{ tabBarLabel: "Hồ sơ" }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            // Ngăn hành động mặc định
             e.preventDefault();
-            // Điều hướng đến màn hình Profile trong Stack
             navigation.getParent()?.navigate("Profile");
           },
         })}
@@ -202,13 +221,13 @@ const MainTabNavigator = () => {
   );
 };
 
-// --- CẤU HÌNH LINKING ---
+// --- CẤU HÌNH LINKING (GIỮ NGUYÊN) ---
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [`${scheme}://`],
   config: { screens: { Login: "auth" } },
 };
 
-// --- NAVIGATOR CHÍNH CỦA APP (GIỮ NGUYÊN NHƯ TRƯỚC) ---
+// --- NAVIGATOR CHÍNH CỦA APP (GIỮ FORMAT BẢN TRÊN) ---
 const AppNavigator = () => (
   <NavigationContainer linking={linking} fallback={<Text>Loading...</Text>}>
     <Stack.Navigator initialRouteName="BeginScreen">
@@ -252,6 +271,13 @@ const AppNavigator = () => (
         component={InviteOrCreateScreen}
         options={{ headerShown: false }}
       />
+      {/* ===== THÊM MÀN HÌNH MỚI NHƯNG GIỮ FORMAT ===== */}
+      <Stack.Screen
+        name="RoleSelection"
+        component={RoleSelectionScreen}
+        options={{ headerShown: false }}
+      />
+
       <Stack.Screen
         name="Main"
         component={MainTabNavigator}
@@ -268,21 +294,15 @@ const AppNavigator = () => (
           },
         }}
       />
-      {/* <Stack.Screen
-        name="TodoList"
-        component={TodoListScreen}
-        options={{ headerShown: false }}
-      /> */}
+
+      {/* Profile */}
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen // chỉ cho creator vào
-        name="BudgetList"
-        component={BudgetListScreen}
-        options={{ headerShown: false }}
-      />
+
+      {/* ===== Tasks & Budget ===== */}
       <Stack.Screen
         name="TaskList"
         component={TaskListScreen}
@@ -299,18 +319,8 @@ const AppNavigator = () => (
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="AddMember"
-        component={AddMemberScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AddWeddingInfo"
-        component={AddWeddingInfo}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="JoinWedding"
-        component={JoinWeddingEvent}
+        name="BudgetList"
+        component={BudgetListScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -324,6 +334,84 @@ const AppNavigator = () => (
         options={{ headerShown: false }}
       />
 
+      {/* ===== Members ===== */}
+      <Stack.Screen
+        name="AddMember"
+        component={AddMemberScreen}
+        options={{ headerShown: false }}
+      />
+
+      {/* ===== Wedding flow / Catalog ===== */}
+      <Stack.Screen
+        name="AddWeddingInfo"
+        component={AddWeddingInfo}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="JoinWedding"
+        component={JoinWeddingEvent}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChooseStyle"
+        component={ChooseStyleScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WeddingDress"
+        component={WeddingDressScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Accessories"
+        component={AccessoriesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WeddingMaterial"
+        component={WeddingMaterialScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WeddingNeckline"
+        component={WeddingNecklineScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WeddingDetail"
+        component={WeddingDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WeddingFlowers"
+        component={WeddingFlowersScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AccessoriesJewelry"
+        component={AccessoriesJewelryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AccessoriesHairClip"
+        component={AccessoriesHairClipScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AccessoriesCrown"
+        component={AccessoriesCrownScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Album"
+        component={AlbumScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AlbumDetail"
+        component={AlbumDetailScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   </NavigationContainer>
 );
@@ -345,13 +433,12 @@ const headerStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#ffffff",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

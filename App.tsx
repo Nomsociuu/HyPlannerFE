@@ -7,6 +7,7 @@ import * as Font from "expo-font";
 import { Provider } from "react-redux";
 import { store, persistor } from "./src/store/store";
 import { PersistGate } from "redux-persist/integration/react";
+import { SelectionProvider } from "./src/contexts/SelectionContext";
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -27,7 +28,9 @@ export default function App() {
         <Provider store={store}>
           {/* THÊM PersistGate Ở ĐÂY */}
           <PersistGate loading={null} persistor={persistor}>
-            <AppNavigator />
+            <SelectionProvider>
+              <AppNavigator />
+            </SelectionProvider>
           </PersistGate>
         </Provider>
       </PaperProvider>
