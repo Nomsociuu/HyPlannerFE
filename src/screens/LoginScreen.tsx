@@ -19,20 +19,28 @@ import { LoginManager, AccessToken } from "react-native-fbsdk-next";
 import { Eye, EyeOff } from "lucide-react-native";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../store/authSlice";
 
 WebBrowser.maybeCompleteAuthSession();
+
+const getTwoThirds = (value: number) => Math.round(value * 0.66);
+
+const isValidEmail = (email: string) => {
+  const emailRegex = /\S+@\S+\.\S+/;
+  return emailRegex.test(email);
+};
 
 const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const dispatch = useDispatch();
 
-  // State cho form
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  // --- LOGIC ĐĂNG NHẬP (Giữ nguyên) ---
   const handleGoogleSignIn = useCallback(async () => {
     setLoading(true);
     try {
@@ -53,10 +61,13 @@ const LoginScreen = () => {
           await AsyncStorage.setItem("appToken", token);
           const response = await apiClient.get("/auth/me");
           const user = response.data;
-          await AsyncStorage.setItem("userData", JSON.stringify(user));
-          navigation.replace("Main", {
-            screen: "Home",
-            params: { token, user },
+
+          dispatch(setCredentials({ user, token }));
+
+          // SỬA LẠI NAVIGATION: Không truyền params
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "InviteOrCreate" }],
           });
         } else {
           Alert.alert("Lỗi", "Không tìm thấy token trong URL trả về.");
@@ -68,7 +79,7 @@ const LoginScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigation]);
+  }, [navigation, dispatch]);
 
   const handleFacebookLogin = async () => {
     setLoading(true);
@@ -89,15 +100,19 @@ const LoginScreen = () => {
       const response = await apiClient.post("/auth/facebook/token", {
         access_token: facebookAccessToken,
       });
-      const { token, user: originalUser } = response.data;
+      const { token, user: originalUser } = response.data as {
+        token: string;
+        user: { name: string; [key: string]: any };
+      };
       const { name, ...restOfUser } = originalUser;
       const updatedUser = { ...restOfUser, fullName: name };
 
-      await AsyncStorage.setItem("appToken", token);
-      await AsyncStorage.setItem("userData", JSON.stringify(updatedUser));
-      navigation.replace("Main", {
-        screen: "Home",
-        params: { token, user: updatedUser },
+      dispatch(setCredentials({ user: updatedUser, token }));
+
+      // SỬA LẠI NAVIGATION: Không truyền params
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "InviteOrCreate" }],
       });
     } catch (error) {
       console.error("Error during Facebook login:", error);
@@ -107,7 +122,42 @@ const LoginScreen = () => {
     }
   };
 
-  // --- GIAO DIỆN MỚI ---
+  const handleEmailLogin = async () => {
+    if (!email.trim() || !password) {
+      Alert.alert(
+        "Thông tin không hợp lệ",
+        "Vui lòng nhập đầy đủ email và mật khẩu."
+      );
+      return;
+    }
+    if (!isValidEmail(email)) {
+      Alert.alert(
+        "Email không hợp lệ",
+        "Vui lòng nhập một địa chỉ email hợp lệ."
+      );
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await apiClient.post("/auth/login", { email, password });
+      const { token, user } = response.data;
+
+      // BƯỚC QUAN TRỌNG: Lưu token vào AsyncStorage
+      await AsyncStorage.setItem("appToken", token);
+
+      dispatch(setCredentials({ user, token }));
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "InviteOrCreate" }],
+      });
+    } catch (error) {
+      const message = "Đã có lỗi xảy ra.";
+      Alert.alert("Đăng nhập thất bại", message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -147,9 +197,9 @@ const LoginScreen = () => {
               onPress={() => setIsPasswordVisible(!isPasswordVisible)}
             >
               {isPasswordVisible ? (
-                <EyeOff color="#8A8A8A" size={22} />
+                <EyeOff color="#8A8A8A" size={getTwoThirds(22)} />
               ) : (
-                <Eye color="#8A8A8A" size={22} />
+                <Eye color="#8A8A8A" size={getTwoThirds(22)} />
               )}
             </TouchableOpacity>
           </View>
@@ -166,7 +216,9 @@ const LoginScreen = () => {
             />
             <Text style={styles.checkboxLabel}>Ghi nhớ đăng nhập</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ForgotPassword")}
+          >
             <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
           </TouchableOpacity>
         </View>
@@ -174,7 +226,7 @@ const LoginScreen = () => {
         {/* Submit Button */}
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => Alert.alert("Thông báo", "Chức năng đang phát triển")}
+          onPress={handleEmailLogin}
           disabled={loading}
         >
           {loading ? (
@@ -198,14 +250,18 @@ const LoginScreen = () => {
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <AntDesign name="google" size={28} color="#2D2D2D" />
+            <AntDesign name="google" size={getTwoThirds(28)} color="#2D2D2D" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.socialButton}
             onPress={handleFacebookLogin}
             disabled={loading}
           >
-            <FontAwesome name="facebook-f" size={28} color="#2D2D2D" />
+            <FontAwesome
+              name="facebook-f"
+              size={getTwoThirds(28)}
+              color="#2D2D2D"
+            />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.socialButton}
@@ -214,18 +270,14 @@ const LoginScreen = () => {
             }
             disabled={loading}
           >
-            <FontAwesome name="user" size={28} color="#2D2D2D" />
+            <FontAwesome name="user" size={getTwoThirds(28)} color="#2D2D2D" />
           </TouchableOpacity>
         </View>
 
         {/* Sign Up */}
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert("Thông báo", "Điều hướng đến trang Đăng ký")
-            }
-          >
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
             <Text style={[styles.signupText, styles.signupLink]}>Đăng ký</Text>
           </TouchableOpacity>
         </View>
@@ -237,146 +289,169 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8F9FA",
   },
   container: {
     flex: 1,
-    justifyContent: "center",
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 40,
+    backgroundColor: "#F8F9FA",
   },
+
   header: {
+    marginBottom: 32,
     alignItems: "center",
-    marginBottom: 40,
   },
   title: {
+    fontFamily: "Agbalumo",
     fontSize: 32,
-    fontWeight: "bold",
-    color: "#D8707E",
-    fontFamily: "System",
+    color: "#e56e8a",
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#8A8A8A",
+    fontFamily: "Montserrat-SemiBold",
+    fontSize: 14,
+    color: "#6B7280",
     textAlign: "center",
-    marginTop: 8,
-    maxWidth: "80%",
+    lineHeight: 20,
+    paddingHorizontal: 16,
   },
+
   form: {
-    marginBottom: 16,
+    marginBottom: 18,
+    gap: 8,
   },
   label: {
+    fontFamily: "Montserrat-Medium",
     fontSize: 16,
-    color: "#2D2D2D",
-    marginBottom: 8,
     fontWeight: "500",
+    color: "#1F2937",
+    marginBottom: 4,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    fontFamily: "Montserrat-Medium",
     height: 50,
-    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
-    borderColor: "#E0E0E0",
-    borderWidth: 1,
-    marginBottom: 16,
+    color: "#1F2937",
+    backgroundColor: "#FFFFFF",
   },
+
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderColor: "#E0E0E0",
+    height: 50,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    paddingRight: 16,
+    backgroundColor: "#FFFFFF",
   },
   inputPassword: {
     flex: 1,
-    height: 50,
+    fontFamily: "Montserrat-Medium",
     fontSize: 16,
+    color: "#1F2937",
+    paddingHorizontal: 16,
   },
+
   optionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 18,
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
   },
   checkbox: {
-    marginRight: 8,
+    borderRadius: 4,
     width: 20,
     height: 20,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "#D1D5DB",
   },
   checkboxLabel: {
+    fontFamily: "Montserrat-Regular",
     fontSize: 14,
-    color: "#8A8A8A",
+    color: "#6B7280",
   },
   forgotPassword: {
+    fontFamily: "Montserrat-SemiBold",
     fontSize: 14,
-    color: "#D8707E",
+    color: "#e56e8a",
     fontWeight: "600",
   },
+
   loginButton: {
-    backgroundColor: "#F2C4CE",
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
+    height: 52,
+    backgroundColor: "#e56e8a",
+    borderRadius: 10,
     justifyContent: "center",
-    height: 54,
+    alignItems: "center",
+    marginBottom: 8,
   },
   loginButtonText: {
+    fontFamily: "Montserrat-Bold",
     fontSize: 18,
-    color: "#D8707E",
-    fontWeight: "bold",
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
+
   separatorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 30,
+    marginVertical: 8,
   },
   separatorLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#E5E7EB",
   },
   separatorText: {
-    marginHorizontal: 10,
-    color: "#8A8A8A",
+    fontFamily: "Montserrat-Medium",
+    fontSize: 14,
+    color: "#9CA3AF",
+    marginHorizontal: 16,
   },
+
   socialLoginContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "space-around",
+    marginBottom: 40,
+    paddingHorizontal: 40,
   },
   socialButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     justifyContent: "center",
     alignItems: "center",
-    borderColor: "#E0E0E0",
-    borderWidth: 1,
-    marginHorizontal: 12,
+    backgroundColor: "#FFFFFF",
   },
+
   signupContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 20,
+    alignItems: "center",
+    marginTop: "auto",
+    paddingBottom: 20,
   },
   signupText: {
+    fontFamily: "Montserrat-Regular",
     fontSize: 14,
-    color: "#8A8A8A",
+    color: "#6B7280",
   },
   signupLink: {
-    color: "#D8707E",
-    fontWeight: "bold",
+    fontFamily: "Montserrat-SemiBold",
+    color: "#e56e8a",
+    fontWeight: "600",
   },
 });
 

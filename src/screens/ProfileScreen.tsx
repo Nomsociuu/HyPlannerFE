@@ -23,6 +23,8 @@ import {
   Cake,
   Pencil,
 } from "lucide-react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { selectCurrentUser, logout } from "../store/authSlice";
 
 // Bảng màu từ thiết kế
 const COLORS = {
@@ -85,57 +87,28 @@ type RootStackParamList = {
 const ProfileScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const dispatch = useDispatch();
 
   // ===== LOGIC TỪ CODE CŨ =====
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userDataString = await AsyncStorage.getItem("userData");
-        if (userDataString) {
-          const parsedData = JSON.parse(userDataString);
-
-          // TẠO ĐỐI TƯỢNG MỚI ĐÚNG VỚI TYPE USERDATA
-          const mappedUser: UserData = {
-            fullName: parsedData.fullName, // Map 'fullName' vào 'fullName'
-            email: parsedData.email,
-            picture: parsedData.picture,
-          };
-          setUser(mappedUser); // Set user với dữ liệu đã được map
-        }
-      } catch (error) {
-        console.error("Lỗi lấy dữ liệu người dùng:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+  const user = useSelector(selectCurrentUser);
+  // const [user, setUser] = useState<UserData | null>(null);
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("appToken");
-    await AsyncStorage.removeItem("userData");
+    // THÊM: Dispatch action logout để xóa user khỏi Redux store
+    dispatch(logout());
+
+    // Giữ lại logic xóa khỏi AsyncStorage để đảm bảo đăng xuất hoàn toàn
+    // await AsyncStorage.removeItem("appToken");
+    // await AsyncStorage.removeItem("userData");
     navigation.navigate("Login");
   };
   // ============================
-
-  // Trạng thái đang tải
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.iconColor} />
-      </View>
-    );
-  }
 
   // Trạng thái lỗi hoặc không có người dùng
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>Không thể tải thông tin người dùng.</Text>
+        <Text>Không tìm thấy thông tin người dùng.</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Login")}>
           <Text style={{ color: COLORS.iconColor, marginTop: 10 }}>
             Quay lại đăng nhập
@@ -263,8 +236,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerTitle: {
+    fontFamily: "Montserrat-SemiBold",
     fontSize: 20,
-    fontWeight: "bold",
     color: COLORS.textPrimary,
   },
   scrollContainer: {
@@ -316,11 +289,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemLabel: {
+    fontFamily: "Montserrat-Medium",
     fontSize: 16,
     color: COLORS.textPrimary,
     fontWeight: "500",
   },
   itemValue: {
+    fontFamily: "Montserrat-Medium",
     fontSize: 14,
     color: COLORS.textSecondary,
     marginTop: 2,
@@ -338,6 +313,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   logoutButtonText: {
+    fontFamily: "Montserrat-SemiBold",
     fontSize: 16,
     color: COLORS.iconColor,
     fontWeight: "bold",
