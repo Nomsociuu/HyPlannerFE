@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { selectCurrentUser } from "../store/authSlice";
@@ -51,7 +53,7 @@ const HomeScreen = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  const handleScroll = (event) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const imageIndex = Math.round(scrollPosition / width);
     setCurrentImageIndex(imageIndex);
@@ -183,7 +185,7 @@ const HomeScreen = () => {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("ChooseStyle")}>
             <View style={styles.menuItemLeft}>
               <View style={styles.menuIcon}>
                 <Shirt size={16} color="white" />
