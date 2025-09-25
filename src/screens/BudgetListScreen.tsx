@@ -464,7 +464,7 @@ export default function BudgetListScreen() {
                 onBack={() => navigation.goBack()}
             />
             <RenderTaskDetailModal />
-            {loading ? (
+            {loading || groupActivities.length === 0 ? (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color="#D95D74" />
                 </View>

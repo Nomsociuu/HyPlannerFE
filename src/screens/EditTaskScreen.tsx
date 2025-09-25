@@ -67,8 +67,15 @@ export default function EditTaskScreen() {
   const [actionLoading, setActionLoading] = useState(false);
   // const userId = "6892b8a2aa0f1640e5c173f2"; //fix cứng tạm thời
   // const creatorId = useSelector((state: RootState) => state.weddingEvent.getWeddingEvent.weddingEvent.creatorId);
-  useEffect(() => {
-    setMembers(memberInTask);
+  useEffect(() => { // fix lỗi ERROR  Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    // So sánh mảng cũ và mới, chỉ set nếu khác
+    if (
+      members.length !== memberInTask.length ||
+      members.some((m, i) => m._id !== memberInTask[i]?._id)
+    ) {
+      setMembers(memberInTask);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberInTask]);
 
   useEffect(() => {
