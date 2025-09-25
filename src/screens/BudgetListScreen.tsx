@@ -46,7 +46,6 @@ import {
   createGroupActivity,
   getGroupActivities,
 } from "../service/groupActivityService";
-import { get } from "axios";
 import { deleteActivity } from "../service/activityService";
 import { selectCurrentUser } from "../store/authSlice";
 
