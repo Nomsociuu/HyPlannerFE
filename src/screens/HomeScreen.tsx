@@ -9,30 +9,15 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { selectCurrentUser } from "../store/authSlice";
-import { jwtDecode } from "jwt-decode";
-import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import { CompositeScreenProps } from "@react-navigation/native";
-import { StackNavigationProp, StackScreenProps } from "@react-navigation/stack";
-import { useNavigation, type NavigationProp } from "@react-navigation/native";
-import {
-  MainTabParamList,
-  RootStackParamList,
-} from "../navigation/AppNavigator";
-import {
-  ListTodo,
-  ChevronRight,
-  List,
-  Shirt,
-  Mail,
-  Home,
-  Heart,
-  Bell,
-  User,
-  Wallet,
-} from "lucide-react-native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../navigation/AppNavigator";
+import { ChevronRight, List, Shirt, Mail, Wallet } from "lucide-react-native";
 import { useState } from "react";
 import { getWeddingEvent } from "../service/weddingEventService";
 import { AppDispatch, RootState } from "../store";
@@ -68,7 +53,7 @@ const HomeScreen = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  const handleScroll = (event) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const imageIndex = Math.round(scrollPosition / width);
     setCurrentImageIndex(imageIndex);
@@ -79,14 +64,20 @@ const HomeScreen = () => {
     const fetchWeddingInfo = async () => {
       if (!user) return;
       try {
-        await getWeddingEvent(user.id, dispatch);
+        await getWeddingEvent(user.id || user._id, dispatch);
       } catch (error) {
         console.error("Error fetching wedding info:", error);
       }
     };
     fetchWeddingInfo();
   }, [dispatch]);
-  const creatorId = useSelector((state: RootState) => state.weddingEvent.getWeddingEvent.weddingEvent.creatorId);
+  const creatorId = useSelector(
+    (state: RootState) =>
+      state.weddingEvent.getWeddingEvent.weddingEvent.creatorId
+  );
+  const eventId = useSelector(
+    (state: RootState) => state.weddingEvent.getWeddingEvent.weddingEvent._id
+  );
   if (!user) {
     return (
       <SafeAreaView style={styles.container}>
@@ -160,7 +151,9 @@ const HomeScreen = () => {
         <View style={styles.menuSection}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => navigation.navigate("TaskList")}
+            onPress={() =>
+              navigation.navigate("TaskList", { eventId: eventId })
+            }
           >
             <View style={styles.menuItemLeft}>
               <View style={styles.menuIcon}>
@@ -174,7 +167,7 @@ const HomeScreen = () => {
             <ChevronRight size={20} color="#9ca3af" />
           </TouchableOpacity>
           {/* chỉ cho creator */}
-          {user.id === creatorId && (
+          {(user.id || user._id) === creatorId && (
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => navigation.navigate("BudgetList")}
@@ -192,7 +185,7 @@ const HomeScreen = () => {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("ChooseStyle")}>
             <View style={styles.menuItemLeft}>
               <View style={styles.menuIcon}>
                 <Shirt size={16} color="white" />
