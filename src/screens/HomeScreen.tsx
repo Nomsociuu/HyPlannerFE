@@ -10,10 +10,13 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../store/authSlice";
 import { jwtDecode } from "jwt-decode";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { CompositeScreenProps } from "@react-navigation/native";
-import { StackScreenProps } from "@react-navigation/stack";
+import { StackNavigationProp, StackScreenProps } from "@react-navigation/stack";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import {
   MainTabParamList,
   RootStackParamList,
@@ -30,11 +33,6 @@ import {
   User,
 } from "lucide-react-native";
 import { useState } from "react";
-
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, "Home">,
-  StackScreenProps<RootStackParamList>
->;
 
 const { width, height } = Dimensions.get("window");
 
@@ -61,24 +59,29 @@ const weddingImages = [
   },
 ];
 
-const HomeScreen = ({ route, navigation }: Props) => {
-  const { token, user } = route.params;
-
-  let displayName = user?.fullName || "User";
-  try {
-    const decoded: { name?: string } = jwtDecode(token);
-    if (decoded.name) displayName = decoded.name;
-  } catch (e) {
-    console.error("Lỗi giải mã token:", e);
-  }
+const HomeScreen = () => {
+  const user = useSelector(selectCurrentUser);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const handleScroll = (event) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const imageIndex = Math.round(scrollPosition / width);
     setCurrentImageIndex(imageIndex);
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text>Đang tải thông tin...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -139,7 +142,10 @@ const HomeScreen = ({ route, navigation }: Props) => {
 
         {/* Menu Items */}
         <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate("TaskList")}
+          >
             <View style={styles.menuItemLeft}>
               <View style={styles.menuIcon}>
                 <List size={16} color="white" />

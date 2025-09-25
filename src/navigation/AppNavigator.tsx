@@ -4,6 +4,7 @@ import {
   NavigationContainer,
   type LinkingOptions,
   useNavigation,
+  type NavigatorScreenParams,
 } from "@react-navigation/native";
 import {
   createStackNavigator,
@@ -11,10 +12,18 @@ import {
 } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../store/authSlice";
 
 // Import các màn hình
 import BeginScreen from "../screens/BeginScreen";
 import LoginScreen from "../screens/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
+import OTPScreen from "../screens/OTPScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
+import PasswordUpdatedScreen from "../screens/PasswordUpdatedScreen";
+import InviteOrCreateScreen from "../screens/InviteOrCreateScreen";
 import HomeScreen from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import MoodBoardsScreen from "../screens/MoodBoardsScreen";
@@ -36,24 +45,30 @@ const scheme = process.env.EXPO_PUBLIC_SCHEME;
 // --- ĐỊNH NGHĨA TYPE (GIỮ NGUYÊN NHƯ TRƯỚC) ---
 export type RootStackParamList = {
   Login: undefined;
-  Main: {
-    screen: string;
-    params?: { token: string; user?: any };
-  };
+  Register: undefined;
+  ForgotPassword: undefined;
+  OTP: { email: string };
+  ChangePassword: { email: string; token: string };
+  PasswordUpdated: undefined;
+  InviteOrCreate: undefined;
+  Main: NavigatorScreenParams<MainTabParamList>;
   // TodoList: undefined;
   Profile: undefined;
   BeginScreen: undefined;
-  TaskList: undefined;
+  TaskList: { eventId: string };
   AddTask: { phaseId: string };
   EditTask: { taskId: string };
-  AddMember: { existingMembers?: Member[], onSelect?: (selectedMembers: Member[]) => void }; // Thêm kiểu cho AddMember
+  AddMember: {
+    existingMembers?: Member[];
+    onSelect?: (selectedMembers: Member[]) => void;
+  }; // Thêm kiểu cho AddMember
   AddWeddingInfo: undefined; //nếu role là người tạo
   JoinWedding: undefined; //nếu role là người tham gia
 };
 
 // ===== CẬP NHẬT LẠI TYPE CHO TAB =====
 export type MainTabParamList = {
-  Home: { token: string; user?: any };
+  Home: undefined;
   Notifications: undefined;
   MoodBoard: undefined;
   // Thêm một route giả cho tab Profile
@@ -70,31 +85,25 @@ const DummyComponent = () => null;
 
 // --- COMPONENT HEADER AVATAR (GIỮ NGUYÊN) ---
 const HeaderAvatar = () => {
-  const [picture, setPicture] = useState<string | null>(null);
+  const user = useSelector(selectCurrentUser); // <-- SỬA: Lấy user từ Redux
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    // ... logic tải ảnh giữ nguyên
-    const loadUserData = async () => {
-      const userDataString = await AsyncStorage.getItem("userData");
-      if (userDataString) {
-        const userData = JSON.parse(userDataString);
-        setPicture(userData.picture || null);
-      }
-    };
-    loadUserData();
-  }, []);
+  // XÓA BỎ HOÀN TOÀN useState VÀ useEffect Ở ĐÂY
 
   const navigateToProfile = () => {
     navigation.navigate("Profile");
   };
+
+  const picture = user?.picture;
 
   return (
     <TouchableOpacity onPress={navigateToProfile}>
       {picture ? (
         <Image source={{ uri: picture }} style={headerStyles.avatar} />
       ) : (
-        <View style={headerStyles.avatar} />
+        <View style={[headerStyles.avatar, { backgroundColor: "#e5e7eb" }]}>
+          <User color="#9ca3af" size={24} />
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -199,7 +208,7 @@ const linking: LinkingOptions<RootStackParamList> = {
 // --- NAVIGATOR CHÍNH CỦA APP (GIỮ NGUYÊN NHƯ TRƯỚC) ---
 const AppNavigator = () => (
   <NavigationContainer linking={linking} fallback={<Text>Loading...</Text>}>
-    <Stack.Navigator initialRouteName="TaskList">
+    <Stack.Navigator initialRouteName="BeginScreen">
       <Stack.Screen
         name="BeginScreen"
         component={BeginScreen}
@@ -208,6 +217,36 @@ const AppNavigator = () => (
       <Stack.Screen
         name="Login"
         component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OTP"
+        component={OTPScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PasswordUpdated"
+        component={PasswordUpdatedScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="InviteOrCreate"
+        component={InviteOrCreateScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
