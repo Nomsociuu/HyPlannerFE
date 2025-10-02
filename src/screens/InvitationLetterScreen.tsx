@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -8,81 +8,124 @@ import {
   StatusBar,
   FlatList,
   Image,
+  Alert,
+  ActivityIndicator,
+  Linking,
 } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { NavigationProp, useNavigation } from "@react-navigation/core";
+import apiClient from "../api/client";
 
-// Dữ liệu mẫu với URL hình ảnh ngang
-const weddingTemplates = [
-  {
-    id: 1,
-    type: "VIP",
-    image: "https://omni.vn/wp-content/uploads/2024/11/hinh-dam-cuoi-2.jpg",
-  },
-  {
-    id: 2,
-    type: "Miễn phí",
-    image: "https://omni.vn/wp-content/uploads/2024/11/hinh-dam-cuoi-2.jpg",
-  },
-  {
-    id: 3,
-    type: "Miễn phí",
-    image: "https://omni.vn/wp-content/uploads/2024/11/hinh-dam-cuoi-2.jpg",
-  },
-  {
-    id: 4,
-    type: "VIP",
-    image: "https://omni.vn/wp-content/uploads/2024/11/hinh-dam-cuoi-2.jpg",
-  },
-];
+// Lấy base URL từ apiClient hoặc định nghĩa hằng số
+// Đảm bảo rằng process.env.EXPO_PUBLIC_BASE_URL đã được định nghĩa trong file .env của bạn
+const BACKEND_URL =
+  process.env.EXPO_PUBLIC_BASE_URL || "https://hy-planner-be.vercel.app";
 
-// Định nghĩa kiểu dữ liệu cho một template
-type Template = (typeof weddingTemplates)[0];
+export type Template = {
+  id: number;
+  name: string;
+  type: string;
+  image: string;
+};
 
 // Component Card cho từng mẫu thiệp
-const TemplateCard = ({ template }: { template: Template }) => (
-  <View style={styles.card}>
-    <View style={styles.cardImageContainer}>
-      <Image
-        source={{ uri: template.image }}
-        style={styles.cardImage}
-        resizeMode="cover"
-      />
-      {/* Badge VIP/Miễn phí */}
-      <View style={styles.badgeContainer}>
-        <Text
-          style={[
-            styles.badgeText,
-            template.type === "VIP" ? styles.vipBadge : styles.freeBadge,
-          ]}
+const TemplateCard = ({
+  template,
+  navigation,
+}: {
+  template: Template;
+  navigation: NavigationProp<RootStackParamList>;
+}) => {
+  const handleUseTemplate = () => {
+    Alert.alert(
+      "Xác nhận sử dụng",
+      `Bạn có muốn tiếp tục với mẫu "${template.name}" không?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đồng ý",
+          onPress: () => {
+            navigation.navigate("CreateWeddingSite", { template: template });
+          },
+        },
+      ]
+    );
+  };
+
+  const handlePreview = () => {
+    // URL này cần khớp với cấu trúc route public trên backend của bạn
+    const previewUrl = `${BACKEND_URL}/inviletter/preview/${template.id}`;
+    Linking.openURL(previewUrl).catch((err) =>
+      Alert.alert("Lỗi", "Không thể mở trang xem thử.")
+    );
+  };
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardImageContainer}>
+        <Image
+          source={{ uri: template.image }}
+          style={styles.cardImage}
+          resizeMode="cover"
+        />
+        <View style={styles.badgeContainer}>
+          <Text
+            style={[
+              styles.badgeText,
+              template.type === "VIP" ? styles.vipBadge : styles.freeBadge,
+            ]}
+          >
+            {template.type}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[styles.button, styles.outlineButton]}
+          onPress={handlePreview}
         >
-          {template.type}
-        </Text>
+          <Text style={[styles.buttonText, styles.outlineButtonText]}>
+            Mẫu thử
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.primaryButton]}
+          onPress={handleUseTemplate}
+        >
+          <Text style={[styles.buttonText, styles.primaryButtonText]}>
+            Sử dụng
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
+  );
+};
 
-    {/* Các nút hành động */}
-    <View style={styles.buttonRow}>
-      <TouchableOpacity style={[styles.button, styles.outlineButton]}>
-        <Text style={[styles.buttonText, styles.outlineButtonText]}>
-          Mẫu thử
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, styles.primaryButton]}>
-        <Text style={[styles.buttonText, styles.primaryButtonText]}>
-          Sử dụng
-        </Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
-
-export default function WeddingInvitationsScreen() {
+export default function InvitationLetterScreen() {
   const [activeTab, setActiveTab] = useState("Tất cả");
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const filteredTemplates = weddingTemplates.filter((template) => {
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const response = await apiClient.get("/templates");
+        setTemplates(response.data);
+      } catch (err: any) {
+        setError(err.message || "Không thể tải danh sách mẫu.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  const filteredTemplates = templates.filter((template) => {
     if (activeTab === "Tất cả") return true;
     return template.type === activeTab;
   });
@@ -111,23 +154,43 @@ export default function WeddingInvitationsScreen() {
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#e07181" />
+        <Text style={{ marginTop: 10, color: "#666" }}>
+          Đang tải danh sách mẫu...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <Text style={{ color: "red" }}>Lỗi: {error}</Text>
+        <Text>Vui lòng thử lại sau.</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      {/* Header */}
+      <StatusBar barStyle="dark-content" backgroundColor="#f4d7ddff" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color="#374151" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thiệp cưới</Text>
+        <Text style={styles.headerTitle}>Chọn Mẫu Thiệp Cưới</Text>
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Danh sách các mẫu thiệp */}
       <FlatList
         data={filteredTemplates}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <TemplateCard template={item} />}
+        renderItem={({ item }) => (
+          <TemplateCard template={item} navigation={navigation} />
+        )}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
@@ -140,9 +203,15 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#ffffff",
+    paddingTop: StatusBar.currentHeight || 0,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
   },
   header: {
-    marginTop: StatusBar.currentHeight || 0,
     backgroundColor: "#f4d7ddff",
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -153,10 +222,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f3f4f6",
   },
   headerTitle: {
-    fontFamily: "Montserrat-SemiBold",
+    fontFamily: "Agbalumo",
     fontSize: 18,
     fontWeight: "600",
-    color: "#000",
+    color: "#e07181",
   },
   filterTabsContainer: {
     backgroundColor: "#ffffff",
@@ -197,6 +266,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderColor: "#ddd8d8ff",
     borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
   cardImageContainer: {
     height: 225,

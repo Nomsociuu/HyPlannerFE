@@ -1,11 +1,12 @@
 // // store/store.js
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import phaseReducer from './phaseSlice';
-import taskReducer from './taskSlice';
-import weddingEventReducer from './weddingEventSlice';
-import groupActivityReducer from './groupActivitySlice';
-import activityReducer from './activitySlice';
-import authReducer from './authSlice';
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import phaseReducer from "./phaseSlice";
+import taskReducer from "./taskSlice";
+import weddingEventReducer from "./weddingEventSlice";
+import groupActivityReducer from "./groupActivitySlice";
+import activityReducer from "./activitySlice";
+import invitationReducer from "./invitationSlice";
+import authReducer from "./authSlice";
 import {
   persistStore,
   persistReducer,
@@ -15,8 +16,8 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
-} from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from "redux-persist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const rootReducer = combineReducers({
   phases: phaseReducer,
@@ -25,12 +26,13 @@ const rootReducer = combineReducers({
   groupActivities: groupActivityReducer,
   activities: activityReducer,
   auth: authReducer,
+  invitation: invitationReducer,
 });
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage: AsyncStorage,
-  whitelist: ['auth'], // chỉ persist auth
+  whitelist: ["auth"], // chỉ persist auth
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

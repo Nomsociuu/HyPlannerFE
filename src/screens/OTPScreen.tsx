@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { setCredentials, selectCurrentToken } from "../store/authSlice";
 import apiClient from "../api/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Sử dụng RouteProp để có type-safety cho route.params
 type OTPScreenRouteProp = RouteProp<RootStackParamList, "OTP">;
@@ -51,6 +52,8 @@ export default function OTPScreen() {
           otp,
         });
         const { token: newToken, user } = response.data;
+
+        await AsyncStorage.setItem("appToken", newToken);
 
         dispatch(setCredentials({ user, token: newToken }));
         Alert.alert("Thành công", "Tài khoản của bạn đã được xác thực.");

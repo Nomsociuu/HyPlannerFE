@@ -12,8 +12,9 @@ import {
   type StackNavigationProp,
 } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../store/authSlice";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { fetchUserInvitation } from "../store/invitationSlice";
 
 // Import các màn hình
 import BeginScreen from "../screens/BeginScreen";
@@ -28,11 +29,16 @@ import HomeScreen from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import InvitationLettersScreen from "../screens/InvitationLetterScreen";
+import CreateWeddingSiteScreen from "../screens/CreateWeddingSiteScreen";
+import { Template } from "../screens/InvitationLetterScreen";
+import WebsiteManagementScreen from "../screens/WebsiteManagementScreen";
+import UpgradeAccountScreen from "../screens/UpgradeAccountScreen";
 import MoodBoardsScreen from "../screens/MoodBoardsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 
 // ===== IMPORT LẠI ICON USER =====
-import { Home, User, Heart, Bell } from "lucide-react-native";
+import { Home, User, Heart, LayoutTemplate } from "lucide-react-native";
+import { selectUserInvitation } from "../store/invitationSlice";
 import TaskListScreen from "../screens/TaskListScreen";
 import CreateNewTaskScreen from "../screens/CreateNewTaskScreen";
 import EditTaskScreen from "../screens/EditTaskScreen";
@@ -61,6 +67,14 @@ import AlbumDetailScreen from "../screens/AlbumDetailScreen";
 
 const scheme = process.env.EXPO_PUBLIC_SCHEME;
 
+type InvitationData = {
+  _id: string;
+  slug: string;
+  groomName: string;
+  brideName: string;
+  // ... các trường dữ liệu khác bạn có
+};
+
 // --- ĐỊNH NGHĨA TYPE (GIỮ NGUYÊN NHƯ TRƯỚC) ---
 export type RootStackParamList = {
   Login: undefined;
@@ -77,12 +91,15 @@ export type RootStackParamList = {
   InviteOrCreate: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   Profile: undefined;
+  UpgradeAccountScreen: undefined;
   EditProfileScreen: {
     label: string;
     currentValue: string;
     field: string;
   };
   InvitationLettersScreen: undefined;
+  CreateWeddingSite: { template: Template };
+  WebsiteManagement: { invitation: InvitationData };
   BeginScreen: undefined;
   TaskList: { eventId: string };
   BudgetList: undefined;
@@ -116,7 +133,7 @@ export type RootStackParamList = {
 // ===== CẬP NHẬT LẠI TYPE CHO TAB =====
 export type MainTabParamList = {
   Home: undefined;
-  Notifications: undefined;
+  WebsiteTab: undefined;
   MoodBoard: undefined;
   // Thêm một route giả cho tab Profile
   ProfileTab: undefined;
@@ -132,7 +149,7 @@ const DummyComponent = () => null;
 
 // --- COMPONENT HEADER AVATAR (GIỮ NGUYÊN) ---
 const HeaderAvatar = () => {
-  const user = useSelector(selectCurrentUser); // <-- Lấy user từ Redux
+  const user = useAppSelector(selectCurrentUser); // <-- Lấy user từ Redux
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const navigateToProfile = () => {
@@ -156,6 +173,7 @@ const HeaderAvatar = () => {
 
 // --- COMPONENT TAB NAVIGATOR (GIỮ FORMAT BẢN TRÊN) ---
 const MainTabNavigator = () => {
+  const userInvitation = useAppSelector(selectUserInvitation);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -163,8 +181,8 @@ const MainTabNavigator = () => {
           const iconSize = focused ? 26 : 22;
           if (route.name === "Home")
             return <Home color={color} size={iconSize} />;
-          if (route.name === "Notifications")
-            return <Bell color={color} size={iconSize} />;
+          if (route.name === "WebsiteTab")
+            return <LayoutTemplate color={color} size={iconSize} />;
           if (route.name === "MoodBoard")
             return <Heart color={color} size={iconSize} />;
           if (route.name === "ProfileTab")
@@ -222,9 +240,31 @@ const MainTabNavigator = () => {
         })}
       />
       <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ tabBarLabel: "Thông báo" }}
+        name="WebsiteTab" // <-- Đổi tên route
+        component={DummyComponent}
+        options={{ tabBarLabel: "Website" }} // <-- Đổi label
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Ngăn hành động mặc định
+            e.preventDefault();
+
+            // Lấy navigator cha (StackNavigator) để điều hướng
+            const parentNavigator = navigation.getParent();
+
+            if (parentNavigator) {
+              // Kiểm tra xem user có dữ liệu website không
+              if (userInvitation) {
+                // Nếu có, đi đến trang quản lý
+                parentNavigator.navigate("WebsiteManagement", {
+                  invitation: userInvitation,
+                });
+              } else {
+                // Nếu không, đi đến trang chọn mẫu để tạo mới
+                parentNavigator.navigate("InvitationLettersScreen");
+              }
+            }
+          },
+        })}
       />
       {/* ===== TAB HỒ SƠ GIỐNG BẢN TRÊN ===== */}
       <Tab.Screen
@@ -248,205 +288,232 @@ const linking: LinkingOptions<RootStackParamList> = {
   config: { screens: { Login: "auth" } },
 };
 
-// --- NAVIGATOR CHÍNH CỦA APP (GIỮ FORMAT BẢN TRÊN) ---
-const AppNavigator = () => (
-  <NavigationContainer linking={linking} fallback={<Text>Loading...</Text>}>
-    <Stack.Navigator initialRouteName="BeginScreen">
-      <Stack.Screen
-        name="BeginScreen"
-        component={BeginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ForgotPassword"
-        component={ForgotPasswordScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OTP"
-        component={OTPScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ChangePassword"
-        component={ChangePasswordScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="PasswordUpdated"
-        component={PasswordUpdatedScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="InviteOrCreate"
-        component={InviteOrCreateScreen}
-        options={{ headerShown: false }}
-      />
-      {/* ===== THÊM MÀN HÌNH MỚI NHƯNG GIỮ FORMAT ===== */}
-      <Stack.Screen
-        name="RoleSelection"
-        component={RoleSelectionScreen}
-        options={{ headerShown: false }}
-      />
+const AppNavigator = () => {
+  const user = useAppSelector(selectCurrentUser);
+  const dispatch = useAppDispatch();
 
-      <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
-        options={{
-          headerTitle: "Hỷ Planner",
-          headerTitleStyle: headerStyles.title,
-          headerRight: () => <HeaderAvatar />,
-          headerLeft: () => <View style={{ width: 15 }} />,
-          headerTitleAlign: "left",
-          headerStyle: {
-            backgroundColor: "#fff",
-            elevation: 1,
-            shadowOpacity: 0.1,
-          },
-        }}
-      />
+  useEffect(() => {
+    if (user) {
+      // Bây giờ dispatch sẽ không báo lỗi nữa
+      dispatch(fetchUserInvitation());
+    }
+  }, [user, dispatch]);
 
-      {/* Profile */}
-      <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
-      />
+  return (
+    <NavigationContainer linking={linking} fallback={<Text>Loading...</Text>}>
+      <Stack.Navigator initialRouteName="BeginScreen">
+        <Stack.Screen
+          name="BeginScreen"
+          component={BeginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OTP"
+          component={OTPScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ChangePassword"
+          component={ChangePasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PasswordUpdated"
+          component={PasswordUpdatedScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="InviteOrCreate"
+          component={InviteOrCreateScreen}
+          options={{ headerShown: false }}
+        />
+        {/* ===== THÊM MÀN HÌNH MỚI NHƯNG GIỮ FORMAT ===== */}
+        <Stack.Screen
+          name="RoleSelection"
+          component={RoleSelectionScreen}
+          options={{ headerShown: false }}
+        />
 
-      <Stack.Screen
-        name="EditProfileScreen"
-        component={EditProfileScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="InvitationLettersScreen"
-        component={InvitationLettersScreen}
-        options={{ headerShown: false }}
-      />
+        <Stack.Screen
+          name="Main"
+          component={MainTabNavigator}
+          options={{
+            headerTitle: "Hỷ Planner",
+            headerTitleStyle: headerStyles.title,
+            headerRight: () => <HeaderAvatar />,
+            headerLeft: () => <View style={{ width: 15 }} />,
+            headerTitleAlign: "left",
+            headerStyle: {
+              backgroundColor: "#fff",
+              elevation: 1,
+              shadowOpacity: 0.1,
+            },
+          }}
+        />
 
-      {/* ===== Tasks & Budget ===== */}
-      <Stack.Screen
-        name="TaskList"
-        component={TaskListScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AddTask"
-        component={CreateNewTaskScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="EditTask"
-        component={EditTaskScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="BudgetList"
-        component={BudgetListScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AddBudget"
-        component={CreateNewBudgetScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="EditBudget"
-        component={EditBudgetScreen}
-        options={{ headerShown: false }}
-      />
+        {/* Profile */}
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
 
-      {/* ===== Members ===== */}
-      <Stack.Screen
-        name="AddMember"
-        component={AddMemberScreen}
-        options={{ headerShown: false }}
-      />
+        <Stack.Screen
+          name="UpgradeAccountScreen"
+          component={UpgradeAccountScreen}
+          options={{ headerShown: false }}
+        />
 
-      {/* ===== Wedding flow / Catalog ===== */}
-      <Stack.Screen
-        name="AddWeddingInfo"
-        component={AddWeddingInfo}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="JoinWedding"
-        component={JoinWeddingEvent}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ChooseStyle"
-        component={ChooseStyleScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WeddingDress"
-        component={WeddingDressScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Accessories"
-        component={AccessoriesScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WeddingMaterial"
-        component={WeddingMaterialScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WeddingNeckline"
-        component={WeddingNecklineScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WeddingDetail"
-        component={WeddingDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WeddingFlowers"
-        component={WeddingFlowersScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AccessoriesJewelry"
-        component={AccessoriesJewelryScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AccessoriesHairClip"
-        component={AccessoriesHairClipScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AccessoriesCrown"
-        component={AccessoriesCrownScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Album"
-        component={AlbumScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AlbumDetail"
-        component={AlbumDetailScreen}
-        options={{ headerShown: false }}
-      />
-    </Stack.Navigator>
-  </NavigationContainer>
-);
+        <Stack.Screen
+          name="EditProfileScreen"
+          component={EditProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="InvitationLettersScreen"
+          component={InvitationLettersScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreateWeddingSite"
+          component={CreateWeddingSiteScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WebsiteManagement"
+          component={WebsiteManagementScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* ===== Tasks & Budget ===== */}
+        <Stack.Screen
+          name="TaskList"
+          component={TaskListScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddTask"
+          component={CreateNewTaskScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EditTask"
+          component={EditTaskScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="BudgetList"
+          component={BudgetListScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddBudget"
+          component={CreateNewBudgetScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EditBudget"
+          component={EditBudgetScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* ===== Members ===== */}
+        <Stack.Screen
+          name="AddMember"
+          component={AddMemberScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* ===== Wedding flow / Catalog ===== */}
+        <Stack.Screen
+          name="AddWeddingInfo"
+          component={AddWeddingInfo}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="JoinWedding"
+          component={JoinWeddingEvent}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ChooseStyle"
+          component={ChooseStyleScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WeddingDress"
+          component={WeddingDressScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Accessories"
+          component={AccessoriesScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WeddingMaterial"
+          component={WeddingMaterialScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WeddingNeckline"
+          component={WeddingNecklineScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WeddingDetail"
+          component={WeddingDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WeddingFlowers"
+          component={WeddingFlowersScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AccessoriesJewelry"
+          component={AccessoriesJewelryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AccessoriesHairClip"
+          component={AccessoriesHairClipScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AccessoriesCrown"
+          component={AccessoriesCrownScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Album"
+          component={AlbumScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AlbumDetail"
+          component={AlbumDetailScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
 
 // --- STYLES CHO HEADER ---
 const headerStyles = StyleSheet.create({
