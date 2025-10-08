@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,6 +7,8 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import {
   ChevronLeft,
@@ -16,22 +18,104 @@ import {
   X,
   Infinity,
   ArrowLeft,
+  CheckCircle,
 } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+  NavigationProp,
+} from "@react-navigation/native";
+import { Linking } from "react-native";
+import apiClient from "../api/client";
+import { useAppDispatch } from "../store/hooks";
+import { fetchUserInvitation } from "../store/invitationSlice";
+import { RootStackParamList } from "src/navigation/AppNavigator";
 
 export default function UpgradeAccountScreen() {
-  const navigation = useNavigation();
+  console.log("--- MÀN HÌNH UPGRADE ĐƯỢC RENDER ---"); // Log khi component render
+
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  type UpgradeAccountRouteParams = { status?: string };
+  const route = useRoute() as { params?: UpgradeAccountRouteParams };
+  const dispatch = useAppDispatch();
+
   const [activeUpgradeTab, setActiveUpgradeTab] = useState("VIP");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("--- useFocusEffect ĐƯỢC KÍCH HOẠT ---");
+      console.log("Toàn bộ route object:", JSON.stringify(route, null, 2));
+      console.log("Kiểm tra route.params:", route.params);
+
+      if (route.params?.status) {
+        console.log(`TÌM THẤY STATUS: ${route.params.status}`);
+        if (route.params.status === "success") {
+          console.log("==> Đang xử lý logic SUCCESS");
+          dispatch(fetchUserInvitation());
+          setShowSuccessOverlay(true);
+          setTimeout(() => setShowSuccessOverlay(false), 3000);
+        } else if (route.params.status === "cancelled") {
+          console.log("==> Đang xử lý logic CANCELLED");
+          Alert.alert("Thông báo", "Giao dịch đã bị hủy.");
+        }
+        console.log("Đang xóa params...");
+        navigation.setParams({ status: undefined });
+      } else {
+        console.log("KHÔNG TÌM THẤY 'status' TRONG route.params");
+      }
+    }, [route.params]) // Chỉ chạy lại khi params thay đổi
+  );
+
+  const handleUpgrade = async (packageType: string) => {
+    setIsProcessing(true);
+    let orderDetails = {};
+    if (packageType === "VIP") {
+      orderDetails = {
+        description: "Nang cap VIP HyPlanner",
+        price: 5000,
+        packageType: "VIP",
+      };
+    } else if (packageType === "SUPER") {
+      orderDetails = {
+        description: "Nang cap SUPER HyPlanner",
+        price: 149000,
+        packageType: "SUPER",
+      };
+    }
+
+    try {
+      const response = await apiClient.post(
+        "/payments/create-link",
+        orderDetails
+      );
+      const { checkoutUrl } = response.data;
+
+      if (checkoutUrl) {
+        await Linking.openURL(checkoutUrl);
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi nâng cấp:", error);
+      Alert.alert(
+        "Lỗi",
+        error.message || "Không thể tạo yêu cầu thanh toán vào lúc này."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const features = [
     {
       label: "Giá",
       free: "Miễn phí",
-      vip: "99.000",
-      super: "149.000",
+      vip: "99.000 đ",
+      super: "149.000 đ",
       isPrice: true,
-      oldVipPrice: "199.000",
-      oldSuperPrice: "299.000",
+      oldVipPrice: "199.000 đ",
+      oldSuperPrice: "299.000 đ",
     },
     {
       label: "Giới hạn checklist",
@@ -91,6 +175,9 @@ export default function UpgradeAccountScreen() {
     return <Text style={styles.featureCellText}>{content}</Text>;
   };
 
+  const selectedPackagePrice =
+    activeUpgradeTab === "VIP" ? features[0].vip : features[0].super;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#e07181" />
@@ -99,7 +186,6 @@ export default function UpgradeAccountScreen() {
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nâng cấp Tài Khoản</Text>
-        <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.upgradeTabsContainer}>
@@ -112,7 +198,7 @@ export default function UpgradeAccountScreen() {
         >
           <Crown
             size={16}
-            color={activeUpgradeTab === "VIP" ? "#e07181" : "#f1c40f"}
+            color={activeUpgradeTab === "VIP" ? "#fff" : "#f1c40f"}
             style={{ marginRight: 5 }}
           />
           <Text
@@ -133,7 +219,7 @@ export default function UpgradeAccountScreen() {
         >
           <Sparkles
             size={16}
-            color={activeUpgradeTab === "SUPER" ? "#e07181" : "#3498db"}
+            color={activeUpgradeTab === "SUPER" ? "#fff" : "#3498db"}
             style={{ marginRight: 5 }}
           />
           <Text
@@ -198,6 +284,34 @@ export default function UpgradeAccountScreen() {
           ))}
         </View>
       </ScrollView>
+
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity
+          style={[styles.upgradeButton, isProcessing && styles.buttonDisabled]}
+          onPress={() => handleUpgrade(activeUpgradeTab)}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.upgradeButtonText}>
+              Nâng cấp {activeUpgradeTab}: {selectedPackagePrice}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {showSuccessOverlay && (
+        <View style={styles.overlay}>
+          <View style={styles.successBox}>
+            <CheckCircle size={60} color="#2ecc71" />
+            <Text style={styles.successTitle}>Nâng cấp thành công!</Text>
+            <Text style={styles.successSubtitle}>
+              Tài khoản của bạn đã được cập nhật.
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -212,7 +326,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#e07181",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -220,9 +333,10 @@ const styles = StyleSheet.create({
     fontFamily: "Agbalumo",
     fontSize: 20,
     color: "#fff",
-    flex: 1,
     textAlign: "center",
-    marginLeft: -24,
+    position: "absolute",
+    left: 40,
+    right: 40,
   },
   upgradeTabsContainer: {
     flexDirection: "row",
@@ -258,7 +372,7 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 10,
-    paddingBottom: 15,
+    paddingBottom: 100, // Tăng padding để không bị nút che mất
   },
   tableContainer: {
     borderWidth: 1,
@@ -337,5 +451,60 @@ const styles = StyleSheet.create({
   verticalSeparator: {
     width: 1,
     backgroundColor: "#e0e0e0",
+  },
+  bottomButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  upgradeButton: {
+    backgroundColor: "#e07181",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonDisabled: {
+    backgroundColor: "#f2b6c0",
+  },
+  upgradeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    fontFamily: "Montserrat-SemiBold",
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  successBox: {
+    width: "75%",
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 30,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  successSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
   },
 });

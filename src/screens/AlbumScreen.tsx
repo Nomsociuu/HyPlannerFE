@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -9,13 +9,13 @@ import {
   Text,
   StatusBar,
   Platform,
-} from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
-import AlbumCard from '../components/AlbumCard';
-import * as userSelectionService from '../service/userSelectionService';
-import { Album } from '../service/userSelectionService';
-import { fonts } from '../theme/fonts';
+} from "react-native";
+import { ChevronLeft } from "lucide-react-native";
+import { useNavigation } from "@react-navigation/native";
+import AlbumCard from "../components/AlbumCard";
+import * as userSelectionService from "../service/userSelectionService";
+import { Album } from "../service/userSelectionService";
+import { fonts } from "../theme/fonts";
 
 const AlbumScreen = () => {
   const navigation = useNavigation();
@@ -34,18 +34,18 @@ const AlbumScreen = () => {
       setAlbums(response.data);
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Có lỗi xảy ra khi tải albums');
+      setError(err.message || "Có lỗi xảy ra khi tải albums");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleAddNewAlbum = () => {
-    navigation.navigate('ChooseStyle' as never);
+    navigation.navigate("ChooseStyle" as never);
   };
 
   const handleAlbumPress = (album: Album) => {
-    navigation.navigate('AlbumDetail' as never, { album } as never);
+    navigation.navigate("AlbumDetail" as never, { album } as never);
   };
 
   const getFirstImage = (album: Album): string => {
@@ -54,43 +54,48 @@ const AlbumScreen = () => {
       const firstSelection = album.selections[0];
       // Try to get image from various sources
       if (firstSelection.styles && firstSelection.styles.length > 0) {
-        return firstSelection.styles[0].image || '';
+        return firstSelection.styles[0].image || "";
       }
-      if (firstSelection.accessories?.veils && firstSelection.accessories.veils.length > 0) {
-        return firstSelection.accessories.veils[0].image || '';
+      if (
+        firstSelection.accessories?.veils &&
+        firstSelection.accessories.veils.length > 0
+      ) {
+        return firstSelection.accessories.veils[0].image || "";
       }
       if (firstSelection.flowers && firstSelection.flowers.length > 0) {
-        return firstSelection.flowers[0].image || '';
+        return firstSelection.flowers[0].image || "";
       }
     }
-    return 'https://images.unsplash.com/photo-1519741497674-611481863552?w=500&h=500&fit=crop';
+    return "https://images.unsplash.com/photo-1519741497674-611481863552?w=500&h=500&fit=crop";
   };
 
-  const topPad = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 8 : 0;
+  const topPad =
+    Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 0;
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: topPad }] }>
+    <SafeAreaView style={[styles.container, { paddingTop: topPad }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('ChooseStyle' as never)}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ChooseStyle" as never)}
+        >
           <ChevronLeft size={24} color="#1f2937" />
         </TouchableOpacity>
         <Image
-          source={require('../../assets/images/logo.png')}
+          source={require("../../assets/images/logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
-        <TouchableOpacity onPress={() => navigation.navigate('Profile' as never)}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Profile" as never)}
+        >
           <Image
-            source={require('../../assets/images/default.png')}
+            source={require("../../assets/images/default.png")}
             style={styles.avatar}
           />
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Đang tải albums...</Text>
@@ -129,17 +134,17 @@ const AlbumScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     height: 64,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: "#F3F4F6",
   },
   logo: {
     height: 32,
@@ -156,36 +161,36 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   albumGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 50,
   },
   loadingText: {
     fontSize: 16,
     fontFamily: fonts.montserratMedium,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 50,
   },
   errorText: {
     fontSize: 16,
     fontFamily: fonts.montserratMedium,
-    color: '#ef4444',
-    textAlign: 'center',
+    color: "#ef4444",
+    textAlign: "center",
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#F9CBD6',
+    backgroundColor: "#F9CBD6",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -193,7 +198,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 14,
     fontFamily: fonts.montserratSemiBold,
-    color: '#1f2937',
+    color: "#1f2937",
   },
 });
 

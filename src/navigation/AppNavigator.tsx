@@ -1,11 +1,12 @@
 // --- IMPORTS GIỐNG BẢN TRÊN ---
-import { useState, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Text, View, Image, StyleSheet, TouchableOpacity } from "react-native";
 import {
   NavigationContainer,
   type LinkingOptions,
   useNavigation,
   type NavigatorScreenParams,
+  useNavigationContainerRef,
 } from "@react-navigation/native";
 import {
   createStackNavigator,
@@ -15,6 +16,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { selectCurrentUser } from "../store/authSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchUserInvitation } from "../store/invitationSlice";
+import * as Linking from "expo-linking";
 
 // Import các màn hình
 import BeginScreen from "../screens/BeginScreen";
@@ -33,6 +35,8 @@ import CreateWeddingSiteScreen from "../screens/CreateWeddingSiteScreen";
 import { Template } from "../screens/InvitationLetterScreen";
 import WebsiteManagementScreen from "../screens/WebsiteManagementScreen";
 import UpgradeAccountScreen from "../screens/UpgradeAccountScreen";
+import PaymentSuccessScreen from "../screens/PaymentSuccessScreen";
+import PaymentCancelledScreen from "../screens/PaymentCancelledScreen";
 import MoodBoardsScreen from "../screens/MoodBoardsScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 
@@ -91,7 +95,7 @@ export type RootStackParamList = {
   InviteOrCreate: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   Profile: undefined;
-  UpgradeAccountScreen: undefined;
+  UpgradeAccountScreen: { status?: "success" | "cancelled" } | undefined;
   EditProfileScreen: {
     label: string;
     currentValue: string;
@@ -100,6 +104,8 @@ export type RootStackParamList = {
   InvitationLettersScreen: undefined;
   CreateWeddingSite: { template: Template };
   WebsiteManagement: { invitation: InvitationData };
+  PaymentSuccess: undefined;
+  PaymentCancelled: undefined;
   BeginScreen: undefined;
   TaskList: { eventId: string };
   BudgetList: undefined;
@@ -285,12 +291,56 @@ const MainTabNavigator = () => {
 // --- CẤU HÌNH LINKING (GIỮ NGUYÊN) ---
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [`${scheme}://`],
-  config: { screens: { Login: "auth" } },
+  config: {
+    screens: {
+      Login: "auth",
+      // Thêm các màn hình mới để deep link có thể trỏ tới
+      PaymentSuccess: "payment-success",
+      PaymentCancelled: "payment-cancelled",
+      UpgradeAccountScreen: "upgrade-account",
+    },
+  },
 };
 
 const AppNavigator = () => {
   const user = useAppSelector(selectCurrentUser);
   const dispatch = useAppDispatch();
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
+
+  useEffect(() => {
+    // ----- BẮT ĐẦU PHẦN SỬA LỖI DEEP LINK HOÀN CHỈNH -----
+    const handleDeepLink = (url: string | null) => {
+      if (!url || !navigationRef.isReady()) {
+        return;
+      }
+
+      // Phân tích URL để lấy cả path và queryParams
+      const { path, queryParams } = Linking.parse(url);
+      console.log(
+        `[Deep Link] Path: ${path}, Params: ${JSON.stringify(queryParams)}`
+      );
+
+      // Dựa vào path để điều hướng
+      if (path === "upgrade-account" && queryParams) {
+        // Quan trọng: Navigate đến màn hình VÀ truyền params vào
+        navigationRef.navigate("UpgradeAccountScreen", queryParams);
+      }
+      // Bạn có thể thêm các else if khác ở đây cho các deep link khác
+    };
+
+    // 1. Xử lý link khi app được khởi động từ trạng thái tắt (Cold Start)
+    Linking.getInitialURL().then(handleDeepLink);
+
+    // 2. Xử lý link khi app đang chạy nền và được mở lại (Warm Start)
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      handleDeepLink(url)
+    );
+
+    return () => {
+      subscription.remove();
+    };
+    // ----- KẾT THÚC PHẦN SỬA LỖI DEEP LINK HOÀN CHỈNH -----
+  }, [navigationRef]);
 
   useEffect(() => {
     if (user) {
@@ -397,6 +447,16 @@ const AppNavigator = () => {
         <Stack.Screen
           name="WebsiteManagement"
           component={WebsiteManagementScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PaymentSuccess"
+          component={PaymentSuccessScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PaymentCancelled"
+          component={PaymentCancelledScreen}
           options={{ headerShown: false }}
         />
 
