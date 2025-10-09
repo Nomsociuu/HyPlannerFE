@@ -483,8 +483,8 @@ export default function BudgetListScreen() {
                   {selectedTask.payer === "bride"
                     ? "Cô dâu"
                     : selectedTask.payer === "groom"
-                      ? "Chú rể"
-                      : "Quỹ chung"}
+                    ? "Chú rể"
+                    : "Quỹ chung"}
                 </Text>
               </>
             )}
@@ -587,14 +587,35 @@ export default function BudgetListScreen() {
           Không có nhóm ngân sách nào.{"\n"}Bạn hãy thêm nhóm ngân sách mới nhé
           !
         </Text>
-        <View style={{ borderWidth: 1, borderColor: "#ddd", padding: 16, borderRadius: 8, borderStyle: "dashed" }}>
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: "#ddd",
+            padding: 16,
+            borderRadius: 8,
+            borderStyle: "dashed",
+          }}
+        >
           <Text>Hoặc bạn có thể sử dụng mẫu ngân sách của chúng tôi</Text>
           <TouchableOpacity
-            style={{ borderRadius: 8, borderWidth: 1, marginTop: 10, padding: 8, backgroundColor: isInsertingBudget ? "#ddd" : "#FEF0F3", borderColor: "#D95D74" }}
+            style={{
+              borderRadius: 8,
+              borderWidth: 1,
+              marginTop: 10,
+              padding: 8,
+              backgroundColor: isInsertingBudget ? "#ddd" : "#FEF0F3",
+              borderColor: "#D95D74",
+            }}
             onPress={handleInsertSampleBudgets}
             disabled={isInsertingBudget}
           >
-            <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center" }}>
+            <View
+              style={{
+                alignSelf: "center",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
               {isInsertingBudget ? (
                 <ActivityIndicator size={24} color="#D95D74" />
               ) : (
@@ -624,9 +645,7 @@ export default function BudgetListScreen() {
 
   return (
     <View style={styles.safeArea}>
-      <BudgetListAppbar
-        onBack={() => navigation.goBack()}
-      />
+      <BudgetListAppbar onBack={() => navigation.goBack()} />
       <RenderTaskDetailModal />
       {loading ? (
         <View style={styles.loadingOverlay}>

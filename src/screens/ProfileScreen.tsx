@@ -8,10 +8,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
-  ActivityIndicator, // <-- Thêm vào
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // <-- Thêm vào
 import {
   ArrowLeft,
   ChevronRight,
@@ -22,12 +21,17 @@ import {
   Globe,
   Cake,
   Pencil,
+  CreditCard,
 } from "lucide-react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { selectCurrentUser, logout } from "../store/authSlice";
-import type { RootStackParamList } from "../navigation/AppNavigator";
 
-// Bảng màu từ thiết kế
+// ----- BƯỚC 1: SỬA LẠI IMPORT -----
+import { useAppDispatch, useAppSelector } from "../store/hooks"; // Dùng hook đã được type
+import { selectCurrentUser, logout } from "../store/authSlice";
+import { persistor } from "../store/store"; // <-- Import persistor từ file store
+import type { RootStackParamList } from "../navigation/AppNavigator";
+import type { StackNavigationProp } from "@react-navigation/stack";
+// ------------------------------------
+
 const COLORS = {
   background: "#F9F9F9",
   card: "#FFFFFF",
@@ -38,7 +42,6 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
-// Component tái sử dụng cho mỗi mục thông tin
 type ProfileItemProps = {
   icon: React.ComponentType<{ color: string; size: number }>;
   label: string;
@@ -71,36 +74,32 @@ const ProfileItem: React.FC<ProfileItemProps> = ({
   );
 };
 
-// Định nghĩa kiểu dữ liệu cho người dùng
-type UserData = {
-  fullName: string;
-  email: string;
-  picture?: string;
-};
-
-import type { StackNavigationProp } from "@react-navigation/stack";
-
 const ProfileScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const dispatch = useDispatch();
 
-  // ===== LOGIC TỪ CODE CŨ =====
-  const user = useSelector(selectCurrentUser);
-  // const [user, setUser] = useState<UserData | null>(null);
+  // ----- BƯỚC 2: SỬ DỤNG HOOK ĐÃ TYPE -----
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectCurrentUser);
+  // ----------------------------------------
 
+  // ----- BƯỚC 3: CẬP NHẬT HÀM LOGOUT -----
   const handleLogout = async () => {
-    // THÊM: Dispatch action logout để xóa user khỏi Redux store
+    // Xóa state trong bộ nhớ Redux
     dispatch(logout());
 
-    // Giữ lại logic xóa khỏi AsyncStorage để đảm bảo đăng xuất hoàn toàn
-    // await AsyncStorage.removeItem("appToken");
-    // await AsyncStorage.removeItem("userData");
-    navigation.navigate("Login");
-  };
-  // ============================
+    // Yêu cầu redux-persist xóa state đã lưu trong AsyncStorage
+    await persistor.purge();
 
-  // Trạng thái lỗi hoặc không có người dùng
+    // Điều hướng về trang Login
+    // Dùng reset để đảm bảo người dùng không thể back lại màn hình Profile
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  };
+  // ----------------------------------------
+
   if (!user) {
     return (
       <View style={styles.center}>
@@ -114,10 +113,8 @@ const ProfileScreen = () => {
     );
   }
 
-  // Giao diện chính khi đã có dữ liệu
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft size={24} color={COLORS.textPrimary} />
@@ -127,10 +124,9 @@ const ProfileScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Avatar */}
         <View style={styles.avatarSection}>
           <Image
-            source={{ uri: user.picture || "https://i.pravatar.cc/300" }} // Sử dụng ảnh người dùng hoặc ảnh mặc định
+            source={{ uri: user.picture || "https://i.pravatar.cc/300" }}
             style={styles.avatar}
           />
           <TouchableOpacity style={styles.editButton}>
@@ -138,7 +134,14 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Thẻ thông tin tài khoản */}
+        <View style={styles.card}>
+          <ProfileItem
+            icon={CreditCard}
+            label="Nâng cấp tài khoản"
+            onPress={() => navigation.navigate("UpgradeAccountScreen")} // <-- Đảm bảo tên route này khớp với AppNavigator
+          />
+        </View>
+
         <View style={styles.card}>
           <ProfileItem
             icon={User}
@@ -146,7 +149,6 @@ const ProfileScreen = () => {
             value={user.fullName}
             onPress={() =>
               navigation.navigate("EditProfileScreen", {
-                // Sửa lại tên màn hình nếu cần
                 label: "Chỉnh sửa Tên",
                 currentValue: user.fullName,
                 field: "fullName",
@@ -174,7 +176,7 @@ const ProfileScreen = () => {
             onPress={() =>
               navigation.navigate("EditProfileScreen", {
                 label: "Thay đổi Mật khẩu",
-                currentValue: "", // Không truyền mật khẩu hiện tại
+                currentValue: "",
                 field: "password",
               })
             }
@@ -203,7 +205,6 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Thẻ thông tin cá nhân */}
         <View style={styles.card}>
           <ProfileItem
             icon={Globe}
@@ -226,7 +227,6 @@ const ProfileScreen = () => {
           />
         </View>
 
-        {/* Nút Đăng xuất */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Đăng xuất</Text>
         </TouchableOpacity>
