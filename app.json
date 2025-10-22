@@ -62,8 +62,8 @@
           "isAutoInitEnabled": true,
           "iosUserTrackingPermission": "This identifier will be used to deliver personalized ads to you."
         }
-      ]
-    ],
+      ],
+      "expo-font"    ],
     "extra": {
       "eas": {
         "projectId": "8a14e1f2-0834-484c-984b-850febe4a8ff"
