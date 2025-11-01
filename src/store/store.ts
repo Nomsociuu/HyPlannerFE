@@ -7,6 +7,7 @@ import groupActivityReducer from "./groupActivitySlice";
 import activityReducer from "./activitySlice";
 import invitationReducer from "./invitationSlice";
 import authReducer from "./authSlice";
+import feedbackReducer from "./feedbackSlice";
 import {
   persistStore,
   persistReducer,
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
   activities: activityReducer,
   auth: authReducer,
   invitation: invitationReducer,
+  feedback: feedbackReducer,
 });
 
 const persistConfig = {

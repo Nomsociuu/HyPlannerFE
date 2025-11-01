@@ -30,6 +30,9 @@ import { selectCurrentUser, logout } from "../store/authSlice";
 import { persistor } from "../store/store"; // <-- Import persistor từ file store
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import type { StackNavigationProp } from "@react-navigation/stack";
+import { getMyFeedback } from "src/service/feedbackService";
+import FeedbackModal from "./FeedbackModal";
+import { resetFeedback } from "src/store/feedbackSlice";
 // ------------------------------------
 
 const COLORS = {
@@ -77,7 +80,7 @@ const ProfileItem: React.FC<ProfileItemProps> = ({
 const ProfileScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isDarkMode, setIsDarkMode] = useState(false);
-
+  const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
   // ----- BƯỚC 2: SỬ DỤNG HOOK ĐÃ TYPE -----
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
@@ -87,7 +90,7 @@ const ProfileScreen = () => {
   const handleLogout = async () => {
     // Xóa state trong bộ nhớ Redux
     dispatch(logout());
-
+    dispatch(resetFeedback())
     // Yêu cầu redux-persist xóa state đã lưu trong AsyncStorage
     await persistor.purge();
 
@@ -99,6 +102,16 @@ const ProfileScreen = () => {
     });
   };
   // ----------------------------------------
+  const userId = user?.id || user?._id;
+
+  // -------------------------Lấy feedback từ Redux store------------
+  const feedback = useAppSelector((state) => state.feedback.getFeedback.feedback);
+  // ----- GỌI getMyFeedback KHI COMPONENT MỞ -----
+  useEffect(() => {
+    if (userId) {
+      getMyFeedback(userId, dispatch);
+    }
+  }, [userId, dispatch]);
 
   if (!user) {
     return (
@@ -112,6 +125,7 @@ const ProfileScreen = () => {
       </View>
     );
   }
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -227,10 +241,24 @@ const ProfileScreen = () => {
           />
         </View>
 
+        {/* Feedback */}
+        <View style={styles.card}>
+          <ProfileItem
+            icon={Mail}
+            label="Phản hồi"
+            onPress={() => setIsFeedbackModalVisible(true)}
+          />
+        </View>
+
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
+      <FeedbackModal
+        visible={isFeedbackModalVisible}
+        onDismiss={() => setIsFeedbackModalVisible(false)}
+        existingFeedback={feedback}
+      />
     </SafeAreaView>
   );
 };
