@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { type StackNavigationProp } from "@react-navigation/stack";
 import { Home, User, Heart, LayoutTemplate } from "lucide-react-native";
 
-import HomeScreen from "../screens/HomeScreen";
+import HomeScreen from "../screens/home/HomeScreen";
 import { useAppSelector } from "../store/hooks";
 import { selectUserInvitation } from "../store/invitationSlice";
 import { MainTabParamList, RootStackParamList } from "./types";

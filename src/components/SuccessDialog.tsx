@@ -1,6 +1,6 @@
-import React from 'react';
-import { Text } from 'react-native';
-import { Portal, Dialog, Button } from 'react-native-paper';
+import React from "react";
+import { Text } from "react-native";
+import { Portal, Dialog, Button } from "react-native-paper";
 import { responsiveFont } from "../../assets/styles/utils/responsive";
 
 interface SuccessDialogProps {
@@ -18,15 +18,12 @@ export const SuccessDialog: React.FC<SuccessDialogProps> = ({
   onDismiss,
   title = "Thành công",
   buttonText = "Đóng",
-  buttonColor = "#4CAF50"
+  buttonColor = "#4CAF50",
 }) => {
   return (
     <Portal>
-      <Dialog
-        visible={visible}
-        onDismiss={onDismiss}
-      >
-        <Dialog.Icon icon="check-circle" size={48} color='#4CAF50' />
+      <Dialog visible={visible} onDismiss={onDismiss}>
+        <Dialog.Icon icon="check-circle" size={48} color="#4CAF50" />
         <Dialog.Title style={{ textAlign: "center", color: buttonColor }}>
           {title}
         </Dialog.Title>
@@ -36,7 +33,7 @@ export const SuccessDialog: React.FC<SuccessDialogProps> = ({
           </Text>
         </Dialog.Content>
         <Dialog.Actions style={{ justifyContent: "center" }}>
-          <Button 
+          <Button
             onPress={onDismiss}
             mode="contained"
             buttonColor={buttonColor}

@@ -22,6 +22,7 @@
     "@types/react-native-vector-icons": "^6.4.18",
     "axios": "^1.12.2",
     "expo": "~53.0.23",
+    "expo-asset": "^12.0.10",
     "expo-auth-session": "6.2.1",
     "expo-checkbox": "^4.1.4",
     "expo-clipboard": "~7.1.5",
@@ -38,7 +39,7 @@
     "lucide-react-native": "^0.537.0",
     "mixpanel-react-native": "^3.1.2",
     "react": "19.0.0",
-    "react-native": "0.79.5",
+    "react-native": "0.79.6",
     "react-native-confetti-cannon": "^1.5.2",
     "react-native-fbsdk-next": "^13.4.1",
     "react-native-gesture-handler": "~2.24.0",
@@ -58,7 +59,10 @@
     "doctor": {
       "reactNativeDirectoryCheck": {
         "exclude": [
-          "jwt-decode"
+          "jwt-decode",
+          "hashids",
+          "slugify",
+          "redux-persist"
         ]
       }
     }

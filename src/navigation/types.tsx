@@ -2,7 +2,7 @@
 
 import { type NavigatorScreenParams } from "@react-navigation/native";
 import { Member } from "../store/weddingEventSlice"; // Giả sử Member được export từ đây
-import { Template } from "../screens/InvitationLetterScreen"; // Giả sử Template được export từ đây
+import { Template } from "../screens/invitation/InvitationLetterScreen"; // Giả sử Template được export từ đây
 
 // Type này có thể cần được định nghĩa đầy đủ hơn hoặc import từ nơi khác
 export type LoveStoryItem = {
@@ -132,7 +132,9 @@ export type RootStackParamList = {
   BrideHeadscarf: undefined;
   GroomEngagementOutfit: undefined;
   GroomEngagementAccessories: undefined;
-  WhoIsNextMarried: {member: any[], creatorId?: string};
+  WhoIsNextMarried: { member: any[]; creatorId?: string };
+  MoodBoards: undefined;
+  Notifications: undefined;
 };
 
 // Định nghĩa các màn hình trong Tab Navigator

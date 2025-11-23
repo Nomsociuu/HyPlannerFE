@@ -24,63 +24,65 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchUserInvitation } from "../store/invitationSlice";
 
 // Import tất cả các màn hình
-import BeginScreen from "../screens/BeginScreen";
-import LoginScreen from "../screens/LoginScreen";
-import RegisterScreen from "../screens/RegisterScreen";
+import BeginScreen from "../screens/auth/BeginScreen";
+import LoginScreen from "../screens/auth/LoginScreen";
+import RegisterScreen from "../screens/auth/RegisterScreen";
 // ... (import tất cả các màn hình khác của bạn ở đây)
-import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
-import OTPScreen from "../screens/OTPScreen";
-import ChangePasswordScreen from "../screens/ChangePasswordScreen";
-import PasswordUpdatedScreen from "../screens/PasswordUpdatedScreen";
-import InviteOrCreateScreen from "../screens/InviteOrCreateScreen";
-import ProfileScreen from "../screens/ProfileScreen";
-import EditProfileScreen from "../screens/EditProfileScreen";
-import InvitationLettersScreen from "../screens/InvitationLetterScreen";
-import CreateWeddingSiteScreen from "../screens/CreateWeddingSiteScreen";
-import EditCoupleInfoScreen from "../screens/EditCoupleInfoScreen";
-import WebsiteManagementScreen from "../screens/WebsiteManagementScreen";
-import UpgradeAccountScreen from "../screens/UpgradeAccountScreen";
-import PaymentSuccessScreen from "../screens/PaymentSuccessScreen";
-import PaymentCancelledScreen from "../screens/PaymentCancelledScreen";
-import TaskListScreen from "../screens/TaskListScreen";
-import CreateNewTaskScreen from "../screens/CreateNewTaskScreen";
-import EditTaskScreen from "../screens/EditTaskScreen";
-import AddMemberScreen from "../screens/AddMemberScreen";
-import AddWeddingInfo from "../screens/AddWeddingInfo";
-import JoinWeddingEvent from "../screens/JoinWeddingEvent";
-import BudgetListScreen from "../screens/BudgetListScreen";
-import CreateNewBudgetScreen from "../screens/CreateNewBudgetScreen";
-import EditBudgetScreen from "../screens/EditBudgetScreen";
-import RoleSelectionScreen from "../screens/RoleSelectionScreen";
-import ChooseStyleScreen from "../screens/ChooseStyleScreen";
-import WeddingDressScreen from "../screens/WeddingDressScreen";
-import WeddingMaterialScreen from "../screens/WeddingMaterialScreen";
-import WeddingNecklineScreen from "../screens/WeddingNecklineScreen";
-import WeddingDetailScreen from "../screens/WeddingDetailScreen";
-import AccessoriesScreen from "../screens/AccessoriesScreen";
-import WeddingFlowersScreen from "../screens/WeddingFlowersScreen";
-import LocationScreen from "../screens/LocationScreen";
-import StyleScreen from "../screens/StyleScreen";
-import ColorToneScreen from "../screens/ColorToneScreen";
-import AccessoriesJewelryScreen from "../screens/AccessoriesJewelryScreen";
-import AccessoriesHairClipScreen from "../screens/AccessoriesHairClipScreen";
-import AccessoriesCrownScreen from "../screens/AccessoriesCrownScreen";
-import AlbumScreen from "../screens/AlbumScreen";
-import AlbumDetailScreen from "../screens/AlbumDetailScreen";
-import GroomSuitScreen from "../screens/GroomSuitScreen";
-import GroomMaterialScreen from "../screens/GroomMaterialScreen";
-import GroomColorScreen from "../screens/GroomColorScreen";
-import GroomAccessoriesLapelScreen from "../screens/GroomAccessoriesLapelScreen";
-import GroomAccessoriesPocketSquareScreen from "../screens/GroomAccessoriesPocketSquareScreen";
-import GroomAccessoriesDecorScreen from "../screens/GroomAccessoriesDecorScreen";
-import BrideAoDaiStyleScreen from "../screens/BrideAoDaiStyleScreen";
-import BrideAoDaiMaterialScreen from "../screens/BrideAoDaiMaterialScreen";
-import BrideAoDaiPatternScreen from "../screens/BrideAoDaiPatternScreen";
-import BrideHeadscarfScreen from "../screens/BrideHeadscarfScreen";
-import GroomEngagementOutfitScreen from "../screens/GroomEngagementOutfitScreen";
-import GroomEngagementAccessoriesScreen from "../screens/GroomEngagementAccessoriesScreen";
-import EditPhaseScreen from "../screens/EditPhase/EditPhaseScreen";
-import WhoIsNextMarriedScreen from "src/screens/WhoIsNextMarriedScreen";
+import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
+import OTPScreen from "../screens/auth/OTPScreen";
+import ChangePasswordScreen from "../screens/auth/ChangePasswordScreen";
+import PasswordUpdatedScreen from "../screens/auth/PasswordUpdatedScreen";
+import InviteOrCreateScreen from "../screens/auth/InviteOrCreateScreen";
+import ProfileScreen from "../screens/profile/ProfileScreen";
+import EditProfileScreen from "../screens/profile/EditProfileScreen";
+import InvitationLettersScreen from "../screens/invitation/InvitationLetterScreen";
+import CreateWeddingSiteScreen from "../screens/invitation/CreateWeddingSiteScreen";
+import EditCoupleInfoScreen from "../screens/invitation/EditCoupleInfoScreen";
+import WebsiteManagementScreen from "../screens/invitation/WebsiteManagementScreen";
+import UpgradeAccountScreen from "../screens/payment/UpgradeAccountScreen";
+import PaymentSuccessScreen from "../screens/payment/PaymentSuccessScreen";
+import PaymentCancelledScreen from "../screens/payment/PaymentCancelledScreen";
+import TaskListScreen from "../screens/tasks/TaskListScreen";
+import CreateNewTaskScreen from "../screens/tasks/CreateNewTaskScreen";
+import EditTaskScreen from "../screens/tasks/EditTaskScreen";
+import AddMemberScreen from "../screens/profile/AddMemberScreen";
+import AddWeddingInfo from "../screens/wedding-setup/AddWeddingInfo";
+import JoinWeddingEvent from "../screens/wedding-setup/JoinWeddingEvent";
+import BudgetListScreen from "../screens/budget/BudgetListScreen";
+import CreateNewBudgetScreen from "../screens/budget/CreateNewBudgetScreen";
+import EditBudgetScreen from "../screens/budget/EditBudgetScreen";
+import RoleSelectionScreen from "../screens/auth/RoleSelectionScreen";
+import ChooseStyleScreen from "../screens/wedding-setup/ChooseStyleScreen";
+import WeddingDressScreen from "../screens/bride/WeddingDressScreen";
+import WeddingMaterialScreen from "../screens/bride/WeddingMaterialScreen";
+import WeddingNecklineScreen from "../screens/bride/WeddingNecklineScreen";
+import WeddingDetailScreen from "../screens/bride/WeddingDetailScreen";
+import AccessoriesScreen from "../screens/accessories/AccessoriesScreen";
+import WeddingFlowersScreen from "../screens/venue-theme/WeddingFlowersScreen";
+import LocationScreen from "../screens/venue-theme/LocationScreen";
+import StyleScreen from "../screens/venue-theme/StyleScreen";
+import ColorToneScreen from "../screens/venue-theme/ColorToneScreen";
+import AccessoriesJewelryScreen from "../screens/accessories/AccessoriesJewelryScreen";
+import AccessoriesHairClipScreen from "../screens/accessories/AccessoriesHairClipScreen";
+import AccessoriesCrownScreen from "../screens/accessories/AccessoriesCrownScreen";
+import AlbumScreen from "../screens/album/AlbumScreen";
+import AlbumDetailScreen from "../screens/album/AlbumDetailScreen";
+import MoodBoardsScreen from "../screens/album/MoodBoardsScreen";
+import NotificationsScreen from "../screens/home/NotificationsScreen";
+import GroomSuitScreen from "../screens/groom/GroomSuitScreen";
+import GroomMaterialScreen from "../screens/groom/GroomMaterialScreen";
+import GroomColorScreen from "../screens/groom/GroomColorScreen";
+import GroomAccessoriesLapelScreen from "../screens/groom/GroomAccessoriesLapelScreen";
+import GroomAccessoriesPocketSquareScreen from "../screens/groom/GroomAccessoriesPocketSquareScreen";
+import GroomAccessoriesDecorScreen from "../screens/groom/GroomAccessoriesDecorScreen";
+import BrideAoDaiStyleScreen from "../screens/bride/BrideAoDaiStyleScreen";
+import BrideAoDaiMaterialScreen from "../screens/bride/BrideAoDaiMaterialScreen";
+import BrideAoDaiPatternScreen from "../screens/bride/BrideAoDaiPatternScreen";
+import BrideHeadscarfScreen from "../screens/bride/BrideHeadscarfScreen";
+import GroomEngagementOutfitScreen from "../screens/groom/GroomEngagementOutfitScreen";
+import GroomEngagementAccessoriesScreen from "../screens/groom/GroomEngagementAccessoriesScreen";
+import EditPhaseScreen from "../screens/tasks/EditPhase/EditPhaseScreen";
+import WhoIsNextMarriedScreen from "../screens/shared/WhoIsNextMarriedScreen";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -441,6 +443,18 @@ const RootStackNavigator = () => {
         <Stack.Screen
           name="WhoIsNextMarried"
           component={WhoIsNextMarriedScreen}
+          options={{ headerShown: false }}
+        />
+        {/* MoodBoards Screen */}
+        <Stack.Screen
+          name="MoodBoards"
+          component={MoodBoardsScreen}
+          options={{ headerShown: false }}
+        />
+        {/* Notifications Screen */}
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

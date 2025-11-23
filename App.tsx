@@ -8,7 +8,7 @@ import { Provider } from "react-redux";
 import { store, persistor } from "./src/store/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { SelectionProvider } from "./src/contexts/SelectionContext";
-import RootStackNavigator from "src/navigation/RootStackNavigator";
+import RootStackNavigator from "./src/navigation/RootStackNavigator";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {

@@ -11,7 +11,7 @@ import {
   getFeedbackFailure,
   getFeedbackStart,
   getFeedbackSuccess,
-} from "src/store/feedbackSlice";
+} from "../store/feedbackSlice";
 
 // Lấy feedback
 // Lấy feedback của user hiện tại
@@ -44,7 +44,10 @@ export const createFeedback = async (
 ) => {
   dispatch(createFeedbackStart());
   try {
-    const response = await apiClient.post(`/feedback/create/${userId}`, feedbackData);
+    const response = await apiClient.post(
+      `/feedback/create/${userId}`,
+      feedbackData
+    );
     dispatch(createFeedbackSuccess());
     if (response.data && response.data.feedback) {
       dispatch(getFeedbackSuccess(response.data.feedback));
