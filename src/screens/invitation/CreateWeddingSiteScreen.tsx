@@ -13,6 +13,7 @@ import {
   ScrollView,
   Alert,
   Linking,
+  Platform,
 } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
 import {
@@ -82,7 +83,11 @@ export default function CreateWeddingSiteScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -237,4 +242,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

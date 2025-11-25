@@ -22,6 +22,12 @@ import apiClient from "../../api/client";
 import * as userSelectionService from "../../service/userSelectionService";
 import { useSelection } from "../../contexts/SelectionContext";
 import CustomPopup from "../../components/CustomPopup";
+import {
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+  spacing,
+} from "../../../assets/styles/utils/responsive";
 
 const { width } = Dimensions.get("window");
 
@@ -285,14 +291,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    height: 64,
+    paddingHorizontal: responsiveWidth(20),
+    height: responsiveHeight(72),
     backgroundColor: "#fff",
   },
-  headerTitle: { fontSize: 20, fontWeight: "600", color: "#1f2937" },
-  instructionContainer: { paddingHorizontal: 16, paddingVertical: 16 },
+  headerTitle: {
+    fontSize: responsiveFont(24),
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  instructionContainer: {
+    paddingHorizontal: responsiveWidth(16),
+    paddingVertical: responsiveHeight(16),
+  },
   instructionText: {
-    fontSize: 16,
+    fontSize: responsiveFont(16),
     fontWeight: "500",
     color: "#6b7280",
     textAlign: "center",
@@ -300,34 +313,48 @@ const styles = StyleSheet.create({
   menuWrapper: {
     position: "absolute",
     top:
-      64 + (Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 0),
-    right: 16,
+      responsiveHeight(64) +
+      (Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 0),
+    right: responsiveWidth(16),
     zIndex: 1000,
   },
   menuContainer: {
     backgroundColor: "#FEF0F3",
-    width: 180,
-    borderRadius: 12,
-    padding: 8,
-    gap: 6,
+    width: responsiveWidth(180),
+    borderRadius: responsiveWidth(12),
+    padding: responsiveWidth(8),
+    gap: responsiveHeight(6),
   },
   menuItem: {
     backgroundColor: "#FEE5EE",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderRadius: responsiveWidth(10),
+    paddingVertical: responsiveHeight(10),
+    paddingHorizontal: responsiveWidth(12),
   },
   menuItemActive: { backgroundColor: "#FFD4E3" },
-  menuText: { color: "#1f2937", textAlign: "center", fontWeight: "500" },
+  menuText: {
+    color: "#1f2937",
+    textAlign: "center",
+    fontWeight: "500",
+    fontSize: responsiveFont(14),
+  },
   menuTextActive: { fontWeight: "700" },
-  scrollContent: { paddingBottom: 24, paddingHorizontal: 16 },
-  columnWrapper: { justifyContent: "space-between", gap: 8, paddingTop: 16 },
+  scrollContent: {
+    paddingBottom:
+      Platform.OS === "android" ? responsiveHeight(80) : responsiveHeight(24),
+    paddingHorizontal: responsiveWidth(16),
+  },
+  columnWrapper: {
+    justifyContent: "space-between",
+    gap: responsiveWidth(8),
+    paddingTop: responsiveHeight(16),
+  },
   actionButton: {
     backgroundColor: "#F9CBD6",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 100,
-    marginHorizontal: 16,
+    paddingVertical: responsiveHeight(12),
+    paddingHorizontal: responsiveWidth(16),
+    borderRadius: responsiveWidth(100),
+    marginHorizontal: responsiveWidth(16),
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
@@ -336,7 +363,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: "#000000",
     textAlign: "center",
-    fontSize: 14,
+    fontSize: responsiveFont(14),
     fontWeight: "600",
   },
   footerActionWrapper: {},

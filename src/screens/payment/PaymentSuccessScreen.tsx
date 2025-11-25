@@ -27,7 +27,11 @@ export default function PaymentSuccessScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f0fdf4" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f0fdf4"
+        translucent={false}
+      />
       <View style={styles.content}>
         <View style={styles.card}>
           <View style={styles.innerContainer}>
@@ -128,4 +132,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-

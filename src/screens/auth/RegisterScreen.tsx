@@ -10,6 +10,7 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Eye, EyeOff } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -91,7 +92,11 @@ export default function RegistrationScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f8f9fa"
+        translucent={false}
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.formContainer}>
           {/* Header */}
@@ -150,9 +155,9 @@ export default function RegistrationScreen() {
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color="#9ca3af" />
+                    <EyeOff size={40} color="#9ca3af" />
                   ) : (
-                    <Eye size={20} color="#9ca3af" />
+                    <Eye size={40} color="#9ca3af" />
                   )}
                 </TouchableOpacity>
               </View>
@@ -176,9 +181,9 @@ export default function RegistrationScreen() {
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={20} color="#9ca3af" />
+                    <EyeOff size={40} color="#9ca3af" />
                   ) : (
-                    <Eye size={20} color="#9ca3af" />
+                    <Eye size={40} color="#9ca3af" />
                   )}
                 </TouchableOpacity>
               </View>
@@ -244,16 +249,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: "Agbalumo",
-    fontSize: 28,
+    fontSize: 56,
     color: "#e56e8a",
     marginBottom: 16,
   },
   subtitle: {
-    fontFamily: "Montserrat-SemiBold",
-    fontSize: 14,
+    fontFamily: "Montserrat-Medium",
+    fontSize: 28,
     color: "#6b7280",
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 40,
   },
   form: {
     gap: 12,
@@ -263,18 +268,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 16,
+    fontSize: 32,
     fontWeight: "500",
     color: "#1f2937",
   },
   input: {
     fontFamily: "Montserrat-Medium",
-    height: 48,
+    height: 80,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     borderRadius: 8,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: 32,
     color: "#6b7280",
     backgroundColor: "#ffffff",
   },
@@ -283,24 +288,24 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     fontFamily: "Montserrat-Medium",
-    height: 48,
+    height: 80,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     borderRadius: 8,
     paddingHorizontal: 16,
-    paddingRight: 48,
-    fontSize: 16,
+    paddingRight: 80,
+    fontSize: 32,
     color: "#6b7280",
     backgroundColor: "#ffffff",
   },
   eyeButton: {
     position: "absolute",
     right: 16,
-    top: 14,
+    top: 20,
     padding: 4,
   },
   registerButton: {
-    height: 48,
+    height: 80,
     backgroundColor: "#f9cbd6",
     borderRadius: 8,
     justifyContent: "center",
@@ -309,7 +314,7 @@ const styles = StyleSheet.create({
   },
   registerButtonText: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 16,
+    fontSize: 32,
     fontWeight: "500",
     color: "#1f2937",
   },
@@ -326,12 +331,12 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 14,
+    fontSize: 28,
     color: "#9ca3af",
     marginHorizontal: 16, // Thêm khoảng cách hai bên chữ
   },
   guestButton: {
-    height: 48,
+    height: 80,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     borderRadius: 8,
@@ -341,7 +346,7 @@ const styles = StyleSheet.create({
   },
   guestButtonText: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 16,
+    fontSize: 32,
     fontWeight: "500",
     color: "#1f2937",
   },
@@ -353,14 +358,13 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 14,
+    fontSize: 28,
     color: "#6b7280",
   },
   loginLink: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 14,
+    fontSize: 28,
     color: "#e56e8a",
     fontWeight: "500",
   },
 });
-

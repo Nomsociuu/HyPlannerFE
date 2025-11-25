@@ -12,6 +12,8 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
   ActivityIndicator,
+  Animated,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser } from "../../store/authSlice";
@@ -25,6 +27,15 @@ import {
   Mail,
   Wallet,
   LifeBuoy,
+  Users,
+  Heart,
+  MessageCircle,
+  Bell,
+  CheckSquare,
+  DollarSign,
+  Calendar,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react-native";
 import { getWeddingEvent } from "../../service/weddingEventService";
 import { AppDispatch, RootState } from "../../store";
@@ -76,6 +87,19 @@ const HomeScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
 
+  // Animation cho trái tim
+  const [heartScale] = useState(new Animated.Value(1));
+  const [heartOpacity] = useState(new Animated.Value(1));
+
+  // Countdown state (theo giây)
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    totalSeconds: 0,
+  });
+
   useEffect(() => {
     MixpanelService.track("Viewed Dashboard");
   }, []);
@@ -94,7 +118,80 @@ const HomeScreen = () => {
     fetchWeddingInfo();
   }, [dispatch, user]);
 
-  // --- TÍNH TOÁN SỐ NGÀY ĐẾM NGƯỢC ĐỘNG ---
+  // Tính toán countdown theo giây và update mỗi giây
+  useEffect(() => {
+    if (!weddingEvent?.timeToMarried) {
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const weddingDate = new Date(weddingEvent.timeToMarried);
+      const now = new Date();
+      const difference = weddingDate.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          totalSeconds: 0,
+        });
+        return;
+      }
+
+      const totalSeconds = Math.floor(difference / 1000);
+      const days = Math.floor(totalSeconds / (24 * 60 * 60));
+      const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+      const seconds = totalSeconds % 60;
+
+      setTimeLeft({ days, hours, minutes, seconds, totalSeconds });
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(interval);
+  }, [weddingEvent?.timeToMarried]);
+
+  // Hiệu ứng animation cho trái tim (nhấp nháy)
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(heartScale, {
+            toValue: 1.15,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(heartOpacity, {
+            toValue: 0.7,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(heartScale, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(heartOpacity, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    );
+
+    pulseAnimation.start();
+
+    return () => pulseAnimation.stop();
+  }, [heartScale, heartOpacity]);
+
+  // --- TÍNH TOÁN SỐ NGÀY ĐẾM NGƯỢC ĐỘNG (giữ lại cho các phần khác nếu cần) ---
   const daysLeft = useMemo(() => {
     if (!weddingEvent?.timeToMarried) {
       return 0;
@@ -156,27 +253,71 @@ const HomeScreen = () => {
   // --- GIAO DIỆN CHÍNH KHI CÓ DỮ LIỆU ---
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom:
-            insets.bottom > 0 ? insets.bottom : responsiveHeight(20),
+            Platform.OS === "android"
+              ? responsiveHeight(80)
+              : insets.bottom > 0
+              ? insets.bottom
+              : responsiveHeight(20),
         }}
       >
-        {/* Greeting Card */}
-        <View style={styles.greetingCard}>
-          <Text style={styles.greetingTitle}>
-            {`Chúc mừng, ${weddingEvent.groomName} & ${weddingEvent.brideName}`}
-          </Text>
-          <Text style={styles.greetingText}>
-            Hãy thiết kế đám cưới của riêng bạn ngay bây giờ!{"\n"}
-            Đếm ngược ngày cưới còn lại:
-          </Text>
-          <View style={styles.countdownContainer}>
-            <Text style={styles.countdownNumber}>{daysLeft}</Text>
-            <Text style={styles.countdownLabel}>ngày</Text>
+        {/* Heart Countdown Widget */}
+        <View style={styles.heartCountdownContainer}>
+          <Animated.View
+            style={[
+              styles.heartBackground,
+              {
+                transform: [{ scale: heartScale }],
+                opacity: heartOpacity,
+              },
+            ]}
+          >
+            <Heart
+              size={responsiveWidth(280)}
+              color="#ff6b9d"
+              fill="#ff6b9d"
+              strokeWidth={1}
+            />
+          </Animated.View>
+
+          <View style={styles.countdownContent}>
+            <Text style={styles.countdownTitle}>Đếm ngược đến ngày cưới</Text>
+            <View style={styles.timeUnitsContainer}>
+              <View style={styles.timeUnit}>
+                <Text style={styles.timeNumber}>{timeLeft.days}</Text>
+                <Text style={styles.timeLabel}>ngày</Text>
+              </View>
+              <Text style={styles.timeSeparator}>:</Text>
+              <View style={styles.timeUnit}>
+                <Text style={styles.timeNumber}>
+                  {String(timeLeft.hours).padStart(2, "0")}
+                </Text>
+                <Text style={styles.timeLabel}>giờ</Text>
+              </View>
+              <Text style={styles.timeSeparator}>:</Text>
+              <View style={styles.timeUnit}>
+                <Text style={styles.timeNumber}>
+                  {String(timeLeft.minutes).padStart(2, "0")}
+                </Text>
+                <Text style={styles.timeLabel}>phút</Text>
+              </View>
+              <Text style={styles.timeSeparator}>:</Text>
+              <View style={styles.timeUnit}>
+                <Text style={styles.timeNumber}>
+                  {String(timeLeft.seconds).padStart(2, "0")}
+                </Text>
+                <Text style={styles.timeLabel}>giây</Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -246,6 +387,26 @@ const HomeScreen = () => {
             </TouchableOpacity>
           )}
 
+          {(user?.id || user?._id) === weddingEvent.creatorId && (
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate("GuestManagementScreen")}
+            >
+              <View style={styles.menuItemLeft}>
+                <View style={styles.menuIcon}>
+                  <Users size={16} color="white" />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={styles.menuTitle}>Quản lý khách mời</Text>
+                  <Text style={styles.menuSubtitle}>
+                    Danh sách & sắp xếp bàn
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate("ChooseStyle")}
@@ -277,6 +438,23 @@ const HomeScreen = () => {
             </View>
             <ChevronRight size={20} color="#9ca3af" />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate("CommunityScreen")}
+          >
+            <View style={styles.menuItemLeft}>
+              <View style={styles.menuIcon}>
+                <MessageCircle size={16} color="white" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Trang Cộng Đồng</Text>
+                <Text style={styles.menuSubtitle}>Chia sẻ & kết nối</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color="#9ca3af" />
+          </TouchableOpacity>
+
           {(user?.id || user?._id) === weddingEvent.creatorId && (
             <TouchableOpacity
               style={styles.menuItem}
@@ -292,9 +470,7 @@ const HomeScreen = () => {
                   <LifeBuoy size={16} color="white" />
                 </View>
                 <View style={styles.menuTextContainer}>
-                  <Text style={styles.menuTitle}>
-                    Ai là người tiếp theo kết hôn?
-                  </Text>
+                  <Text style={styles.menuTitle}>Ai là người tiếp theo?</Text>
                   <Text style={styles.menuSubtitle}>
                     Xem ai là người tiếp theo
                   </Text>
@@ -327,9 +503,9 @@ const styles = StyleSheet.create({
     borderRadius: responsiveWidth(16),
     padding: responsiveWidth(24),
   },
-  greetingTitle: {
+  greeting: {
     fontFamily: "Montserrat-SemiBold",
-    fontSize: responsiveFont(18),
+    fontSize: responsiveFont(22),
     fontWeight: "500",
     color: "#1f2937",
     marginBottom: responsiveHeight(12),
@@ -337,9 +513,65 @@ const styles = StyleSheet.create({
   greetingText: {
     fontFamily: "Montserrat-Medium",
     color: "#6b7280",
-    fontSize: responsiveFont(14),
-    lineHeight: responsiveHeight(20),
+    fontSize: responsiveFont(16),
+    lineHeight: responsiveHeight(22),
     marginBottom: responsiveHeight(24),
+  },
+  heartCountdownContainer: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    height: responsiveHeight(300),
+    marginVertical: responsiveHeight(16),
+    marginTop: responsiveHeight(32),
+  },
+  heartBackground: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  countdownContent: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
+  countdownTitle: {
+    fontFamily: "Montserrat-SemiBold",
+    fontSize: responsiveFont(14),
+    color: "#ffffff",
+    marginBottom: responsiveHeight(12),
+    textAlign: "center",
+  },
+  timeUnitsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: responsiveWidth(6),
+  },
+  timeUnit: {
+    alignItems: "center",
+  },
+  timeNumber: {
+    fontFamily: "Montserrat-Bold",
+    fontSize: responsiveFont(28),
+    fontWeight: "bold",
+    color: "#ffffff",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  timeLabel: {
+    fontFamily: "Montserrat-Medium",
+    fontSize: responsiveFont(11),
+    color: "#ffffff",
+    marginTop: responsiveHeight(2),
+  },
+  timeSeparator: {
+    fontFamily: "Montserrat-Bold",
+    fontSize: responsiveFont(24),
+    fontWeight: "bold",
+    color: "#ffffff",
+    marginBottom: responsiveHeight(14),
   },
   countdownContainer: {
     flexDirection: "row",
@@ -414,11 +646,11 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat-SemiBold",
     fontWeight: "500",
     color: "#1f2937",
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(18),
   },
   menuSubtitle: {
     fontFamily: "Montserrat-Medium",
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: "#6b7280",
   },
   bottomPadding: {

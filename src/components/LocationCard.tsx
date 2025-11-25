@@ -10,6 +10,11 @@ import {
 import { Image } from "expo-image";
 import { Check } from "lucide-react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
+import {
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+} from "../../assets/styles/utils/responsive";
 
 const { width } = Dimensions.get("window");
 
@@ -101,28 +106,28 @@ const LocationCard: React.FC<LocationCardProps> = ({
 
 const styles = StyleSheet.create({
   itemContainer: {
-    marginBottom: 24,
+    marginBottom: responsiveHeight(24),
     alignItems: "center",
   },
   imageContainer: {
     position: "relative",
-    borderRadius: 8,
+    borderRadius: responsiveWidth(8),
     overflow: "hidden",
-    marginBottom: 8,
+    marginBottom: responsiveHeight(8),
   },
   itemImage: {
-    borderRadius: 8,
+    borderRadius: responsiveWidth(8),
   },
   pinIconContainer: {
     position: "absolute",
-    right: 3,
+    right: responsiveWidth(3),
     zIndex: 1,
   },
   pinButton: {
-    width: 20,
-    height: 20,
+    width: responsiveWidth(20),
+    height: responsiveWidth(20),
     backgroundColor: "#F9A8D4",
-    borderRadius: 10,
+    borderRadius: responsiveWidth(10),
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -139,14 +144,14 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 4,
+    borderRadius: responsiveWidth(10),
+    padding: responsiveWidth(4),
   },
   pinIcon: {
     transform: [{ rotate: "45deg" }],
   },
   itemName: {
-    fontSize: 14,
+    fontSize: responsiveFont(14),
     fontWeight: "500",
     color: "#1f2937",
     textAlign: "center",

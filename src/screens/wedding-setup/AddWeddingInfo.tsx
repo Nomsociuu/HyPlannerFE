@@ -128,7 +128,15 @@ export default function AddWeddingInfo() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         <ScrollView
-          contentContainerStyle={styles.contentContainer}
+          contentContainerStyle={[
+            styles.contentContainer,
+            {
+              paddingBottom:
+                Platform.OS === "android"
+                  ? responsiveHeight(80)
+                  : responsiveHeight(24),
+            },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.title}>Kế Hoạch Cưới</Text>

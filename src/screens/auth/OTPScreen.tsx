@@ -142,7 +142,7 @@ export default function OTPScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" translucent={false} />
       <View style={styles.contentContainer}>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Xác thực OTP</Text>
@@ -267,4 +267,3 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
 });
-

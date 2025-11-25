@@ -135,6 +135,15 @@ export type RootStackParamList = {
   WhoIsNextMarried: { member: any[]; creatorId?: string };
   MoodBoards: undefined;
   Notifications: undefined;
+  CommunityScreen: undefined;
+  PostDetailScreen: { postId: string };
+  CreatePostScreen: { postId?: string }; // Optional: for editing existing post
+  TopicGroupsScreen: undefined;
+  TopicGroupDetailScreen: { groupId: string };
+  InspireBoardScreen: undefined;
+  CommunityAlbumsScreen: undefined;
+  GuestManagementScreen: undefined;
+  GuestDetailScreen: { guestId: string };
 };
 
 // Định nghĩa các màn hình trong Tab Navigator

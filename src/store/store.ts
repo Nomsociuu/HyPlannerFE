@@ -8,6 +8,12 @@ import activityReducer from "./activitySlice";
 import invitationReducer from "./invitationSlice";
 import authReducer from "./authSlice";
 import feedbackReducer from "./feedbackSlice";
+import postReducer from "./postSlice";
+import commentReducer from "./commentSlice";
+import guestReducer from "./guestSlice";
+import topicGroupReducer from "./topicGroupSlice";
+import albumReducer from "./albumSlice";
+import savedPostReducer from "./savedPostSlice";
 import {
   persistStore,
   persistReducer,
@@ -29,6 +35,12 @@ const rootReducer = combineReducers({
   auth: authReducer,
   invitation: invitationReducer,
   feedback: feedbackReducer,
+  posts: postReducer,
+  comments: commentReducer,
+  guests: guestReducer,
+  topicGroups: topicGroupReducer,
+  albums: albumReducer,
+  savedPosts: savedPostReducer,
 });
 
 const persistConfig = {

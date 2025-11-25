@@ -5,12 +5,20 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Platform,
 } from "react-native";
 import { useState } from "react";
 import { LogIn, UserPlus } from "lucide-react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { type RootStackParamList } from "../../navigation/types";
 import { StackNavigationProp } from "@react-navigation/stack";
+import {
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+  spacing,
+  borderRadius,
+} from "../../../assets/styles/utils/responsive";
 
 export default function BeginScreen() {
   const [isLoginPressed, setIsLoginPressed] = useState(false);
@@ -28,7 +36,11 @@ export default function BeginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f9f9f9" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f9f9f9"
+        translucent={false}
+      />
       <View style={styles.content}>
         <View style={styles.mainArea}>
           <Text style={styles.title}>Hỷ Planner</Text>
@@ -49,7 +61,7 @@ export default function BeginScreen() {
             onPressIn={() => setIsLoginPressed(true)}
             onPressOut={() => setIsLoginPressed(false)}
           >
-            <LogIn size={20} color="#1f2937" style={styles.buttonIcon} />
+            <LogIn size={24} color="#1f2937" style={styles.buttonIcon} />
             <Text style={styles.loginButtonText}>Đăng nhập</Text>
           </TouchableOpacity>
 
@@ -64,7 +76,7 @@ export default function BeginScreen() {
             onPressIn={() => setIsRegisterPressed(true)}
             onPressOut={() => setIsRegisterPressed(false)}
           >
-            <UserPlus size={20} color="#1f2937" style={styles.buttonIcon} />
+            <UserPlus size={24} color="#1f2937" style={styles.buttonIcon} />
             <Text style={styles.registerButtonText}>Đăng ký</Text>
           </TouchableOpacity>
         </View>
@@ -85,82 +97,99 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 40,
-    paddingVertical: 20,
+    paddingHorizontal: responsiveWidth(48),
+    paddingVertical: responsiveHeight(32),
   },
   mainArea: {
     width: "100%",
+    maxWidth: responsiveWidth(500),
     alignItems: "center",
     justifyContent: "center",
     flexGrow: 1,
   },
   title: {
     fontFamily: "Agbalumo",
-    fontSize: 36,
+    fontSize: responsiveFont(48),
     color: "#9e182b",
-    marginBottom: 8,
+    marginBottom: responsiveHeight(12),
     textAlign: "center",
   },
   subtitle: {
     fontFamily: "Montserrat-SemiBold",
-    fontSize: 20,
+    fontSize: responsiveFont(24),
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 24,
+    marginBottom: responsiveHeight(28),
     textAlign: "center",
   },
   description: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 16,
+    fontSize: responsiveFont(18),
     color: "#6b7280",
-    lineHeight: 24,
-    marginBottom: 54,
+    lineHeight: responsiveHeight(28),
+    marginBottom: responsiveHeight(64),
     textAlign: "center",
+    paddingHorizontal: responsiveWidth(16),
   },
   loginButton: {
     width: "100%",
     backgroundColor: "#f9cbd6",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    marginBottom: 16,
+    paddingVertical: responsiveHeight(20),
+    paddingHorizontal: responsiveWidth(32),
+    borderRadius: borderRadius.lg,
+    marginBottom: responsiveHeight(20),
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   loginButtonText: {
     fontFamily: "Montserrat-Medium",
     color: "#1f2937",
-    fontSize: 18,
+    fontSize: responsiveFont(20),
     fontWeight: "600",
   },
   registerButton: {
     width: "100%",
     backgroundColor: "#ffffff",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 16,
+    paddingVertical: responsiveHeight(20),
+    paddingHorizontal: responsiveWidth(32),
+    borderRadius: borderRadius.lg,
     borderWidth: 2,
     borderColor: "#e5e7eb",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   registerButtonText: {
     fontFamily: "Montserrat-Medium",
     color: "#1f2937",
-    fontSize: 18,
+    fontSize: responsiveFont(20),
     fontWeight: "600",
   },
   buttonIcon: {
-    marginRight: 8,
+    marginRight: responsiveWidth(12),
   },
   footer: {
-    paddingHorizontal: 40,
+    paddingHorizontal: responsiveWidth(48),
     fontFamily: "Montserrat-Medium",
     color: "#9ca3af",
-    fontSize: 14,
+    fontSize: responsiveFont(15),
     textAlign: "center",
   },
 });
-

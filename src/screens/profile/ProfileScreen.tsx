@@ -9,6 +9,8 @@ import {
   ScrollView,
   Switch,
   ActivityIndicator,
+  Alert,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -23,15 +25,21 @@ import {
   Pencil,
   CreditCard,
 } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
 
 // ----- BƯỚC 1: SỬA LẠI IMPORT -----
 import { useAppDispatch, useAppSelector } from "../../store/hooks"; // Dùng hook đã được type
-import { selectCurrentUser, logout } from "../../store/authSlice";
+import {
+  selectCurrentUser,
+  logout,
+  updateUserField,
+} from "../../store/authSlice";
 import { persistor } from "../../store/store"; // <-- Import persistor từ file store
 import type { RootStackParamList } from "../../navigation/types";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { getMyFeedback } from "../../service/feedbackService";
 import FeedbackModal from "../shared/FeedbackModal";
+import apiClient from "../../api/client";
 import { resetFeedback } from "../../store/feedbackSlice";
 import { MixpanelService } from "../../service/mixpanelService";
 // ------------------------------------
@@ -82,18 +90,96 @@ const ProfileScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   // ----- BƯỚC 2: SỬ DỤNG HOOK ĐÃ TYPE -----
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectCurrentUser);
   // ----------------------------------------
 
-  // ----- BƯỚC 3: CẬP NHẬT HÀM LOGOUT -----
+  // Hàm chọn và upload avatar
+  const handleChangeAvatar = async () => {
+    try {
+      // Yêu cầu quyền truy cập thư viện ảnh
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          "Quyền truy cập bị từ chối",
+          "Bạn cần cho phép truy cập thư viện ảnh để thay đổi avatar."
+        );
+        return;
+      }
+
+      // Mở thư viện ảnh
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+
+        setUploadingAvatar(true);
+
+        // Tạo FormData để upload file
+        const formData = new FormData();
+
+        // Lấy tên file từ URI
+        const filename = imageUri.split("/").pop() || "avatar.jpg";
+
+        // Xác định MIME type
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : "image/jpeg";
+
+        // Thêm file vào FormData
+        formData.append("avatar", {
+          uri: imageUri,
+          name: filename,
+          type: type,
+        } as any);
+
+        // Gọi API upload với FormData
+        const response = await apiClient.post("/upload/avatar", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        // Lấy URL từ Cloudinary
+        const cloudinaryUrl = response.data.avatarUrl;
+
+        // Cập nhật Redux state để đồng bộ avatar trong toàn app
+        dispatch(updateUserField({ field: "picture", value: cloudinaryUrl }));
+
+        MixpanelService.track("Updated Avatar", {
+          uploadMethod: "Cloudinary",
+        });
+
+        Alert.alert("Thành công", "Cập nhật avatar thành công!");
+        setUploadingAvatar(false);
+      }
+    } catch (error: any) {
+      console.error("Error updating avatar:", error);
+      const errorMessage =
+        error?.message || "Không thể cập nhật avatar. Vui lòng thử lại.";
+      Alert.alert("Lỗi", errorMessage);
+      setUploadingAvatar(false);
+    }
+  }; // ----- BƯỚC 3: CẬP NHẬT HÀM LOGOUT -----
   const handleLogout = async () => {
     // Xóa state trong bộ nhớ Redux
     MixpanelService.track("User Logged Out");
     MixpanelService.reset();
     dispatch(logout());
     dispatch(resetFeedback());
+
+    // Xóa token và rememberMe preference
+    await AsyncStorage.removeItem("appToken");
+    await AsyncStorage.removeItem("rememberMe");
+
     // Yêu cầu redux-persist xóa state đã lưu trong AsyncStorage
     await persistor.purge();
 
@@ -142,13 +228,27 @@ const ProfileScreen = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { paddingBottom: Platform.OS === "ios" ? 20 : 32 },
+        ]}
+      >
         <View style={styles.avatarSection}>
           <Image
             source={{ uri: user.picture || "https://i.pravatar.cc/300" }}
             style={styles.avatar}
           />
-          <TouchableOpacity style={styles.editButton}>
+          {uploadingAvatar && (
+            <View style={styles.uploadingOverlay}>
+              <ActivityIndicator size="large" color={COLORS.white} />
+            </View>
+          )}
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleChangeAvatar}
+            disabled={uploadingAvatar}
+          >
             <Pencil size={18} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -306,6 +406,15 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
+  },
+  uploadingOverlay: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   editButton: {
     position: "absolute",

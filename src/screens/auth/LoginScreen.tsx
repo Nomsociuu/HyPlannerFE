@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
@@ -60,10 +61,11 @@ const LoginScreen = () => {
 
         if (token) {
           await AsyncStorage.setItem("appToken", token);
+          await AsyncStorage.setItem("rememberMe", JSON.stringify(true));
           const response = await apiClient.get("/auth/me");
           const user = response.data;
 
-          dispatch(setCredentials({ user, token }));
+          dispatch(setCredentials({ user, token, rememberMe: true }));
 
           const userId = user.id || user._id;
           MixpanelService.identify(userId);
@@ -71,7 +73,10 @@ const LoginScreen = () => {
             fullName: user.fullName,
             email: user.email,
           });
-          MixpanelService.track("Logged In", { Method: "Google" });
+          MixpanelService.track("Logged In", {
+            Method: "Google",
+            RememberMe: true,
+          });
 
           // SỬA LẠI NAVIGATION: Không truyền params
           navigation.reset({
@@ -119,14 +124,20 @@ const LoginScreen = () => {
         fullName: name || originalUser.email,
       };
 
-      dispatch(setCredentials({ user: updatedUser, token }));
+      await AsyncStorage.setItem("appToken", token);
+      await AsyncStorage.setItem("rememberMe", JSON.stringify(true));
+
+      dispatch(setCredentials({ user: updatedUser, token, rememberMe: true }));
 
       MixpanelService.identify(updatedUser.id);
       MixpanelService.setUser({
         fullName: updatedUser.fullName,
         email: updatedUser.email,
       });
-      MixpanelService.track("Logged In", { Method: "Facebook" });
+      MixpanelService.track("Logged In", {
+        Method: "Facebook",
+        RememberMe: true,
+      });
 
       // SỬA LẠI NAVIGATION: Không truyền params
       navigation.reset({
@@ -161,15 +172,21 @@ const LoginScreen = () => {
       const response = await apiClient.post("/auth/login", { email, password });
       const { token, user } = response.data;
 
-      // BƯỚC QUAN TRỌNG: Lưu token vào AsyncStorage
+      // Lưu token vào AsyncStorage
       await AsyncStorage.setItem("appToken", token);
 
-      dispatch(setCredentials({ user, token }));
+      // Lưu preference ghi nhớ đăng nhập
+      await AsyncStorage.setItem("rememberMe", JSON.stringify(rememberMe));
+
+      dispatch(setCredentials({ user, token, rememberMe }));
 
       const userId = user.id || user._id;
       MixpanelService.identify(userId);
       MixpanelService.setUser({ fullName: user.fullName, email: user.email });
-      MixpanelService.track("Logged In", { Method: "Email" });
+      MixpanelService.track("Logged In", {
+        Method: "Email",
+        RememberMe: rememberMe,
+      });
 
       navigation.reset({
         index: 0,
@@ -185,7 +202,11 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+        translucent={false}
+      />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -222,9 +243,9 @@ const LoginScreen = () => {
               onPress={() => setIsPasswordVisible(!isPasswordVisible)}
             >
               {isPasswordVisible ? (
-                <EyeOff color="#8A8A8A" size={getTwoThirds(22)} />
+                <EyeOff color="#8A8A8A" size={44} />
               ) : (
-                <Eye color="#8A8A8A" size={getTwoThirds(22)} />
+                <Eye color="#8A8A8A" size={44} />
               )}
             </TouchableOpacity>
           </View>
@@ -275,18 +296,14 @@ const LoginScreen = () => {
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <AntDesign name="google" size={getTwoThirds(28)} color="#2D2D2D" />
+            <AntDesign name="google" size={56} color="#2D2D2D" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.socialButton}
             onPress={handleFacebookLogin}
             disabled={loading}
           >
-            <FontAwesome
-              name="facebook-f"
-              size={getTwoThirds(28)}
-              color="#2D2D2D"
-            />
+            <FontAwesome name="facebook-f" size={56} color="#2D2D2D" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.socialButton}
@@ -295,7 +312,7 @@ const LoginScreen = () => {
             }
             disabled={loading}
           >
-            <FontAwesome name="user" size={getTwoThirds(28)} color="#2D2D2D" />
+            <FontAwesome name="user" size={56} color="#2D2D2D" />
           </TouchableOpacity>
         </View>
 
@@ -329,38 +346,38 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: "Agbalumo",
-    fontSize: 32,
+    fontSize: 64,
     color: "#e56e8a",
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: "Montserrat-SemiBold",
-    fontSize: 14,
+    fontFamily: "Montserrat-Medium",
+    fontSize: 28,
     color: "#6B7280",
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 40,
     paddingHorizontal: 16,
   },
 
   form: {
     marginBottom: 18,
-    gap: 8,
+    gap: 16,
   },
   label: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 16,
+    fontSize: 32,
     fontWeight: "500",
     color: "#1F2937",
     marginBottom: 4,
   },
   input: {
     fontFamily: "Montserrat-Medium",
-    height: 50,
+    height: 80,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     borderRadius: 10,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: 32,
     color: "#1F2937",
     backgroundColor: "#FFFFFF",
   },
@@ -368,7 +385,7 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    height: 50,
+    height: 80,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     borderRadius: 10,
@@ -378,7 +395,7 @@ const styles = StyleSheet.create({
   inputPassword: {
     flex: 1,
     fontFamily: "Montserrat-Medium",
-    fontSize: 16,
+    fontSize: 32,
     color: "#1F2937",
     paddingHorizontal: 16,
   },
@@ -387,7 +404,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 18,
+    marginTop: 16,
+    marginBottom: 32,
   },
   checkboxContainer: {
     flexDirection: "row",
@@ -396,24 +414,24 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     borderRadius: 4,
-    width: 20,
-    height: 20,
+    width: 40,
+    height: 40,
     borderColor: "#D1D5DB",
   },
   checkboxLabel: {
-    fontFamily: "Montserrat-Regular",
-    fontSize: 14,
+    fontFamily: "Montserrat-Medium",
+    fontSize: 28,
     color: "#6B7280",
   },
   forgotPassword: {
-    fontFamily: "Montserrat-SemiBold",
-    fontSize: 14,
+    fontFamily: "Montserrat-Medium",
+    fontSize: 28,
     color: "#e56e8a",
     fontWeight: "600",
   },
 
   loginButton: {
-    height: 52,
+    height: 80,
     backgroundColor: "#e56e8a",
     borderRadius: 10,
     justifyContent: "center",
@@ -421,8 +439,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   loginButtonText: {
-    fontFamily: "Montserrat-Bold",
-    fontSize: 18,
+    fontFamily: "Montserrat-Medium",
+    fontSize: 36,
     fontWeight: "700",
     color: "#FFFFFF",
   },
@@ -430,7 +448,7 @@ const styles = StyleSheet.create({
   separatorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: 16,
   },
   separatorLine: {
     flex: 1,
@@ -439,7 +457,7 @@ const styles = StyleSheet.create({
   },
   separatorText: {
     fontFamily: "Montserrat-Medium",
-    fontSize: 14,
+    fontSize: 28,
     color: "#9CA3AF",
     marginHorizontal: 16,
   },
@@ -451,9 +469,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     justifyContent: "center",
@@ -469,17 +487,15 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   signupText: {
-    fontFamily: "Montserrat-Regular",
-    fontSize: 14,
+    fontFamily: "Montserrat-Medium",
+    fontSize: 28,
     color: "#6B7280",
   },
   signupLink: {
-    fontFamily: "Montserrat-SemiBold",
+    fontFamily: "Montserrat-Medium",
     color: "#e56e8a",
     fontWeight: "600",
   },
 });
 
 export default LoginScreen;
-
-

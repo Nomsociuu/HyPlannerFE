@@ -240,7 +240,11 @@ export default function UpgradeAccountScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#e07181" />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#e07181"
+        translucent={false}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft size={24} color="#fff" />

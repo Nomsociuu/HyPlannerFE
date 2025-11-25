@@ -46,7 +46,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" translucent={false} />
       <View style={styles.formContainer}>
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Quên mật khẩu</Text>
@@ -140,4 +140,3 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
 });
-

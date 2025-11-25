@@ -11,10 +11,13 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Platform,
 } from "react-native";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft, Crown } from "lucide-react-native";
 import { RootStackParamList } from "../../navigation/types";
 import { NavigationProp, useNavigation } from "@react-navigation/core";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../store/authSlice";
 import apiClient from "../../api/client";
 
 // Lấy base URL từ apiClient hoặc định nghĩa hằng số
@@ -33,11 +36,31 @@ export type Template = {
 const TemplateCard = ({
   template,
   navigation,
+  userAccountType,
 }: {
   template: Template;
   navigation: NavigationProp<RootStackParamList>;
+  userAccountType: string;
 }) => {
   const handleUseTemplate = () => {
+    // Kiểm tra quyền truy cập VIP template
+    if (template.type === "VIP" && userAccountType === "FREE") {
+      Alert.alert(
+        "Nâng cấp tài khoản",
+        "Mẫu thiệp này chỉ dành cho tài khoản VIP. Vui lòng nâng cấp tài khoản để sử dụng.",
+        [
+          { text: "Hủy", style: "cancel" },
+          {
+            text: "Nâng cấp ngay",
+            onPress: () => {
+              navigation.navigate("UpgradeAccountScreen");
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     Alert.alert(
       "Xác nhận sử dụng",
       `Bạn có muốn tiếp tục với mẫu "${template.name}" không?`,
@@ -91,11 +114,22 @@ const TemplateCard = ({
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, styles.primaryButton]}
+          style={[
+            styles.button,
+            styles.primaryButton,
+            template.type === "VIP" &&
+              userAccountType === "FREE" &&
+              styles.lockedButton,
+          ]}
           onPress={handleUseTemplate}
         >
+          {template.type === "VIP" && userAccountType === "FREE" && (
+            <Crown size={16} color="#ffffff" style={{ marginRight: 6 }} />
+          )}
           <Text style={[styles.buttonText, styles.primaryButtonText]}>
-            Sử dụng
+            {template.type === "VIP" && userAccountType === "FREE"
+              ? "Nâng cấp"
+              : "Sử dụng"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -106,6 +140,8 @@ const TemplateCard = ({
 export default function InvitationLetterScreen() {
   const [activeTab, setActiveTab] = useState("Tất cả");
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const currentUser = useSelector(selectCurrentUser);
+  const userAccountType = currentUser?.accountType || "FREE";
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -176,7 +212,11 @@ export default function InvitationLetterScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f4d7ddff" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f4d7ddff"
+        translucent={false}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color="#374151" />
@@ -189,7 +229,11 @@ export default function InvitationLetterScreen() {
         data={filteredTemplates}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TemplateCard template={item} navigation={navigation} />
+          <TemplateCard
+            template={item}
+            navigation={navigation}
+            userAccountType={userAccountType}
+          />
         )}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContainer}
@@ -233,6 +277,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 16,
   },
   tabButton: {
@@ -276,7 +321,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardImageContainer: {
-    height: 225,
+    height: 400,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     overflow: "hidden",
@@ -324,6 +369,11 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: "#e07181",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  lockedButton: {
+    backgroundColor: "#9ca3af",
   },
   buttonText: {
     fontFamily: "Montserrat-SemiBold",
@@ -337,4 +387,3 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
 });
-

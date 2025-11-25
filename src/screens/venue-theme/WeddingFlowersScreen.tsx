@@ -19,7 +19,13 @@ import { fonts } from "../../theme/fonts";
 import * as weddingCostumeService from "../../service/weddingCostumeService";
 import { Style } from "../../store/weddingCostume";
 import { useSelection } from "../../contexts/SelectionContext";
-import { getGridGap } from "../../../assets/styles/utils/responsive";
+import {
+  getGridGap,
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+  spacing,
+} from "../../../assets/styles/utils/responsive";
 import CustomPopup from "../../components/CustomPopup";
 
 const { width } = Dimensions.get("window");
@@ -116,7 +122,15 @@ const WeddingFlowersScreen = () => {
       {/* Flowers Grid */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom:
+              Platform.OS === "android"
+                ? responsiveHeight(80)
+                : responsiveHeight(24),
+          },
+        ]}
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -187,40 +201,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    height: 64,
+    paddingHorizontal: responsiveWidth(20),
+    height: responsiveHeight(72),
     backgroundColor: "#FEF0F3",
   },
   headerTitleContainer: {
     alignItems: "center",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: responsiveFont(24),
     fontFamily: fonts.montserratSemiBold,
     color: "#1f2937",
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: responsiveFont(15),
     fontFamily: fonts.montserratMedium,
     color: "#6b7280",
-    marginTop: 2,
+    marginTop: responsiveHeight(2),
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: responsiveHeight(24),
   },
   flowerGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: responsiveWidth(16),
+    paddingTop: responsiveHeight(16),
     gap: getGridGap(),
   },
   actionButton: {
     backgroundColor: "#F9CBD6",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 100,
-    marginTop: 16,
+    paddingVertical: responsiveHeight(8),
+    paddingHorizontal: responsiveWidth(16),
+    borderRadius: responsiveWidth(100),
+    marginTop: responsiveHeight(16),
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -229,9 +243,9 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: "#000000",
     textAlign: "center",
-    fontSize: 14,
+    fontSize: responsiveFont(14),
     fontFamily: fonts.montserratSemiBold,
-    marginRight: 4,
+    marginRight: responsiveWidth(4),
   },
   actionButtonDisabled: {
     opacity: 0.6,

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Platform,
 } from "react-native";
 import { Check } from "lucide-react-native";
 import { RootStackParamList } from "../../navigation/types";
@@ -15,7 +16,11 @@ export default function PasswordUpdatedScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f9fafb"
+        translucent={false}
+      />
       <View style={styles.content}>
         <View style={styles.card}>
           <View style={styles.innerContainer}>
@@ -111,4 +116,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-

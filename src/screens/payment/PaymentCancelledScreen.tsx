@@ -17,7 +17,11 @@ export default function PaymentCancelledScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff1f2" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#fff1f2"
+        translucent={false}
+      />
       <View style={styles.content}>
         <View style={styles.card}>
           <View style={styles.innerContainer}>
@@ -118,4 +122,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-

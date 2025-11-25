@@ -16,6 +16,12 @@ import LocationCard from "../../components/LocationCard";
 import * as venueThemeService from "../../service/venueThemeService";
 import * as userSelectionService from "../../service/userSelectionService";
 import CustomPopup from "../../components/CustomPopup";
+import {
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+  spacing,
+} from "../../../assets/styles/utils/responsive";
 
 const { width } = Dimensions.get("window");
 
@@ -81,7 +87,15 @@ const StyleScreen = () => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom:
+              Platform.OS === "android"
+                ? responsiveHeight(80)
+                : responsiveHeight(24),
+          },
+        ]}
       >
         <View style={styles.grid}>
           {options.map((item) => (
@@ -168,32 +182,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    height: 64,
+    paddingHorizontal: responsiveWidth(20),
+    height: responsiveHeight(72),
     backgroundColor: "#fff",
   },
-  headerTitle: { fontSize: 20, fontWeight: "600", color: "#1f2937" },
-  instructionContainer: { paddingHorizontal: 16, paddingVertical: 16 },
+  headerTitle: {
+    fontSize: responsiveFont(24),
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  instructionContainer: {
+    paddingHorizontal: responsiveWidth(16),
+    paddingVertical: responsiveHeight(16),
+  },
   instructionText: {
-    fontSize: 16,
+    fontSize: responsiveFont(16),
     fontWeight: "500",
     color: "#6b7280",
     textAlign: "center",
   },
-  scrollContent: { paddingBottom: 24 },
+  scrollContent: {},
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: responsiveWidth(16),
+    gap: responsiveWidth(8),
     justifyContent: "space-between",
   },
   actionButton: {
     backgroundColor: "#F9CBD6",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 100,
-    marginTop: 12,
+    paddingVertical: responsiveHeight(12),
+    paddingHorizontal: responsiveWidth(16),
+    borderRadius: responsiveWidth(100),
+    marginTop: responsiveHeight(12),
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
@@ -202,7 +223,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: "#000000",
     textAlign: "center",
-    fontSize: 14,
+    fontSize: responsiveFont(14),
     fontWeight: "600",
   },
 });

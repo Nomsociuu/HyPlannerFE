@@ -14,10 +14,19 @@ import {
   Modal,
   ActivityIndicator,
   ScrollView,
+  Image,
+  Platform,
 } from "react-native";
 // 1. IMPORT PICKER
 import { Picker } from "@react-native-picker/picker";
-import { ChevronLeft, Plus, Trash2, Edit } from "lucide-react-native";
+import {
+  ChevronLeft,
+  Plus,
+  Trash2,
+  Edit,
+  ImagePlus,
+} from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import {
   RootStackParamList,
@@ -56,6 +65,67 @@ export default function EditCoupleInfo() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [currentItem, setCurrentItem] = useState<any>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Hàm upload ảnh lên Cloudinary
+  const handlePickImage = async (fieldName: string) => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          "Quyền truy cập bị từ chối",
+          "Bạn cần cho phép truy cập thư viện ảnh."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploadingImage(true);
+
+        const imageUri = result.assets[0].uri;
+        const formData = new FormData();
+        const filename = imageUri.split("/").pop() || "image.jpg";
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : "image/jpeg";
+
+        formData.append("images", {
+          uri: imageUri,
+          name: filename,
+          type: type,
+        } as any);
+
+        const response = await apiClient.post("/upload/post-images", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        const cloudinaryUrl = response.data.imageUrls[0];
+        console.log("Cloudinary URL:", cloudinaryUrl);
+        setCurrentItem({ ...currentItem, [fieldName]: cloudinaryUrl });
+        console.log("Updated currentItem:", {
+          ...currentItem,
+          [fieldName]: cloudinaryUrl,
+        });
+
+        Alert.alert("Thành công", "Đã tải ảnh lên!");
+      }
+    } catch (error: any) {
+      console.error("Lỗi upload ảnh:", error);
+      console.error("Error response:", error.response?.data);
+      Alert.alert("Lỗi", "Không thể tải ảnh lên. Vui lòng thử lại.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     switch (sectionType) {
@@ -108,6 +178,7 @@ export default function EditCoupleInfo() {
         payload = data;
         break;
       case "album":
+        console.log("Saving album data:", data);
         payload = { album: data };
         break;
       case "loveStory":
@@ -125,12 +196,20 @@ export default function EditCoupleInfo() {
         break;
     }
 
+    console.log("Payload to send:", JSON.stringify(payload, null, 2));
+
     try {
-      await apiClient.put("/invitation/my-invitation", payload);
+      const response = await apiClient.put(
+        "/invitation/my-invitation",
+        payload
+      );
+      console.log("Update response:", response.data);
       dispatch(fetchUserInvitation());
       Alert.alert("Thành công", `Đã cập nhật mục "${title}"!`);
       navigation.goBack();
     } catch (error: any) {
+      console.error("Error updating invitation:", error);
+      console.error("Error response:", error.response?.data);
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -198,17 +277,28 @@ export default function EditCoupleInfo() {
 
   // ... (Hàm handleSaveItemInModal giữ nguyên)
   const handleSaveItemInModal = () => {
+    console.log("handleSaveItemInModal - sectionType:", sectionType);
+    console.log("handleSaveItemInModal - currentItem:", currentItem);
+    console.log("handleSaveItemInModal - isEditing:", isEditing);
+
     if (sectionType === "album") {
-      if (!currentItem.url || !currentItem.url.trim()) {
-        Alert.alert("Lỗi", "URL ảnh không được để trống.");
+      // Sửa validation để chấp nhận URL từ Cloudinary
+      if (
+        !currentItem.url ||
+        (typeof currentItem.url === "string" && !currentItem.url.trim())
+      ) {
+        Alert.alert("Lỗi", "Vui lòng chọn ảnh trước khi lưu.");
         return;
       }
       if (isEditing) {
         const newAlbum = [...(data as string[])];
         newAlbum[currentItem.index] = currentItem.url;
+        console.log("Updated album (editing):", newAlbum);
         setData(newAlbum);
       } else {
-        setData([...(data as string[]), currentItem.url]);
+        const newAlbum = [...(data as string[]), currentItem.url];
+        console.log("Updated album (adding):", newAlbum);
+        setData(newAlbum);
       }
     } else {
       const isTitleMissing = !currentItem.title && !currentItem.name;
@@ -429,16 +519,36 @@ export default function EditCoupleInfo() {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>
-                {isEditing ? "Chỉnh sửa" : "Thêm mới"} URL Ảnh
+                {isEditing ? "Chỉnh sửa" : "Thêm mới"} Ảnh
               </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="https://example.com/image.jpg"
-                value={currentItem.url}
-                onChangeText={(text) =>
-                  setCurrentItem({ ...currentItem, url: text })
-                }
-              />
+
+              {/* Preview ảnh */}
+              {currentItem.url && (
+                <View style={styles.imagePreviewContainer}>
+                  <Image
+                    source={{ uri: currentItem.url }}
+                    style={styles.imagePreview}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+
+              {/* Nút chọn ảnh */}
+              <TouchableOpacity
+                style={styles.pickImageButton}
+                onPress={() => handlePickImage("url")}
+                disabled={uploadingImage}
+              >
+                <ImagePlus size={20} color="#ff6b9d" />
+                <Text style={styles.pickImageText}>
+                  {uploadingImage
+                    ? "Đang tải..."
+                    : currentItem.url
+                    ? "Thay đổi ảnh"
+                    : "Chọn ảnh từ thiết bị"}
+                </Text>
+              </TouchableOpacity>
+
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity
                   style={styles.modalButton}
@@ -449,6 +559,7 @@ export default function EditCoupleInfo() {
                 <TouchableOpacity
                   style={[styles.modalButton, styles.confirmButton]}
                   onPress={handleSaveItemInModal}
+                  disabled={uploadingImage}
                 >
                   <Text style={{ color: "#fff" }}>Lưu</Text>
                 </TouchableOpacity>
@@ -494,14 +605,34 @@ export default function EditCoupleInfo() {
                   setCurrentItem({ ...currentItem, content: text })
                 }
               />
-              <TextInput
-                style={styles.input}
-                placeholder="URL ảnh minh họa"
-                value={currentItem.image}
-                onChangeText={(text) =>
-                  setCurrentItem({ ...currentItem, image: text })
-                }
-              />
+
+              {/* Preview ảnh Love Story */}
+              {currentItem.image && (
+                <View style={styles.imagePreviewContainer}>
+                  <Image
+                    source={{ uri: currentItem.image }}
+                    style={styles.imagePreview}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+
+              {/* Nút chọn ảnh Love Story */}
+              <TouchableOpacity
+                style={styles.pickImageButton}
+                onPress={() => handlePickImage("image")}
+                disabled={uploadingImage}
+              >
+                <ImagePlus size={20} color="#ff6b9d" />
+                <Text style={styles.pickImageText}>
+                  {uploadingImage
+                    ? "Đang tải..."
+                    : currentItem.image
+                    ? "Thay đổi ảnh"
+                    : "Chọn ảnh minh họa"}
+                </Text>
+              </TouchableOpacity>
+
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity
                   style={styles.modalButton}
@@ -622,7 +753,11 @@ export default function EditCoupleInfo() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fbe2e7" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#fbe2e7"
+        translucent={false}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color="#374151" />
@@ -743,8 +878,36 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   confirmButton: { backgroundColor: "#e07181" },
+  imagePreviewContainer: {
+    marginVertical: 15,
+    alignItems: "center",
+  },
+  imagePreview: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    backgroundColor: "#f3f4f6",
+  },
+  pickImageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff1f5",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#ff6b9d",
+    gap: 8,
+  },
+  pickImageText: {
+    fontFamily: "Montserrat-SemiBold",
+    fontSize: 14,
+    color: "#ff6b9d",
+  },
 
-  // 6. THÊM STYLE CHO PICKER
+  // 6. THÊM STYLES CHO PICKER
   pickerContainer: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -758,4 +921,3 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 });
-

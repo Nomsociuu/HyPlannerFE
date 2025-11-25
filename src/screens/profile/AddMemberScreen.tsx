@@ -203,6 +203,9 @@ export default function AddMemberScreen() {
           }
           keyExtractor={(item) => item._id}
           style={styles.flatList}
+          contentContainerStyle={{
+            paddingBottom: Platform.OS === "ios" ? 20 : 32,
+          }}
         />
       </View>
 

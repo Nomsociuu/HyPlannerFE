@@ -15,6 +15,12 @@ import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../navigation/types";
 import { fonts } from "../../theme/fonts";
+import {
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+  spacing,
+} from "../../../assets/styles/utils/responsive";
 
 interface MenuItem {
   id: string;
@@ -127,7 +133,15 @@ const ChooseStyleScreen = () => {
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          {
+            paddingBottom:
+              Platform.OS === "android"
+                ? responsiveHeight(80)
+                : responsiveHeight(24),
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.menuGrid}>{menuItems.map(renderMenuItem)}</View>
@@ -145,42 +159,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    height: 64,
+    paddingHorizontal: responsiveWidth(20),
+    height: responsiveHeight(72),
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
   },
   logo: {
-    height: 32,
-    width: 48,
+    height: responsiveHeight(32),
+    width: responsiveWidth(48),
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: responsiveWidth(32),
+    height: responsiveWidth(32),
+    borderRadius: responsiveWidth(16),
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: responsiveWidth(16),
   },
   contentContainer: {
     flexGrow: 1,
     justifyContent: "flex-start",
-    paddingTop: 60,
+    paddingTop: responsiveHeight(60),
   },
   menuGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 16,
-    paddingVertical: 20,
+    gap: responsiveWidth(16),
+    paddingVertical: responsiveHeight(20),
   },
   menuItem: {
-    width: "47%", // Slightly less than 50% to account for gap
+    width: "47%",
     aspectRatio: 4 / 3,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: responsiveWidth(16),
+    padding: responsiveWidth(16),
     justifyContent: "space-between",
     shadowColor: "#000",
     shadowOffset: {
@@ -192,12 +206,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   itemNumber: {
-    fontSize: 20,
+    fontSize: responsiveFont(20),
     fontFamily: fonts.montserratSemiBold,
     color: "#1f2937",
   },
   itemTitle: {
-    fontSize: 16,
+    fontSize: responsiveFont(16),
     fontFamily: fonts.montserratMedium,
     color: "#1f2937",
   },

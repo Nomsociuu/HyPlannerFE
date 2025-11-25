@@ -10,14 +10,21 @@ import {
   ActivityIndicator,
   ScrollView,
   StatusBar,
+  Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { ArrowLeft } from "lucide-react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { setCredentials, selectCurrentToken, logout } from "../../store/authSlice";
+import {
+  setCredentials,
+  selectCurrentToken,
+  logout,
+} from "../../store/authSlice";
 import type { RootStackParamList } from "../../navigation/types";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import apiClient from "../../api/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { persistor } from "../../store/store";
 
 const COLORS = {
   background: "#F9F9F9",
@@ -129,8 +136,14 @@ const EditProfileScreen = () => {
           },
           {
             text: "Có, Đăng xuất",
-            onPress: () => {
+            onPress: async () => {
+              // Xóa token và rememberMe preference
+              await AsyncStorage.removeItem("appToken");
+              await AsyncStorage.removeItem("rememberMe");
+
               dispatch(logout()); // Gọi action logout
+              await persistor.purge();
+
               // Reset navigation stack về màn hình Login
               navigation.reset({
                 index: 0,
@@ -243,8 +256,13 @@ const EditProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar translucent={false} />
       {renderHeader()}
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: Platform.OS === "ios" ? 20 : 32,
+        }}
+      >
         {/* Điều kiện để render form phù hợp */}
         {field === "password"
           ? renderChangePasswordForm()
@@ -317,4 +335,3 @@ const styles = StyleSheet.create({
 });
 
 export default EditProfileScreen;
-

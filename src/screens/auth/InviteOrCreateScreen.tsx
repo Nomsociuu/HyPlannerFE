@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { Heart, Plus, Key } from "lucide-react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -66,7 +67,11 @@ export default function InviteOrCreateScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fdf2f8" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#fdf2f8"
+        translucent={false}
+      />
 
       {/* Background decorative elements */}
       <View style={styles.backgroundDecorations}>
@@ -271,4 +276,3 @@ const styles = StyleSheet.create({
     color: "#ec4899",
   },
 });
-

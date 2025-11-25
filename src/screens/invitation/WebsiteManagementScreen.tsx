@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator,
   Modal, // --- THÊM
+  Platform,
 } from "react-native";
 import {
   ChevronLeft,
@@ -215,7 +216,11 @@ export default function WebsiteManagementScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fbe2e7" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#fbe2e7"
+        translucent={false}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color="#374151" />
@@ -483,4 +488,3 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 });
-

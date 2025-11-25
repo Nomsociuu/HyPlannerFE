@@ -19,7 +19,7 @@ import { linking } from "./linking";
 import { MainTabNavigator } from "./MainTabNavigator";
 
 // Redux
-import { selectCurrentUser } from "../store/authSlice";
+import { selectCurrentUser, selectRememberMe } from "../store/authSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { fetchUserInvitation } from "../store/invitationSlice";
 
@@ -83,6 +83,15 @@ import GroomEngagementOutfitScreen from "../screens/groom/GroomEngagementOutfitS
 import GroomEngagementAccessoriesScreen from "../screens/groom/GroomEngagementAccessoriesScreen";
 import EditPhaseScreen from "../screens/tasks/EditPhase/EditPhaseScreen";
 import WhoIsNextMarriedScreen from "../screens/shared/WhoIsNextMarriedScreen";
+import CommunityScreen from "../screens/community/CommunityScreen";
+import PostDetailScreen from "../screens/community/PostDetailScreen";
+import CreatePostScreen from "../screens/community/CreatePostScreen";
+import { TopicGroupsScreen } from "../screens/community/TopicGroupsScreen";
+import { TopicGroupDetailScreen } from "../screens/community/TopicGroupDetailScreen";
+import { InspireBoardScreen } from "../screens/community/InspireBoardScreen";
+import CommunityAlbumsScreen from "../screens/community/CommunityAlbumsScreen";
+import GuestManagementScreen from "../screens/guest/GuestManagementScreen";
+import GuestDetailScreen from "../screens/guest/GuestDetailScreen";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -110,8 +119,19 @@ const HeaderAvatar = ({
 
 const RootStackNavigator = () => {
   const user = useAppSelector(selectCurrentUser);
+  const rememberMe = useAppSelector(selectRememberMe);
   const dispatch = useAppDispatch();
   const navigationRef = useNavigationContainerRef<RootStackParamList>();
+
+  // Xác định màn hình khởi đầu dựa trên auth state
+  const getInitialRouteName = (): keyof RootStackParamList => {
+    // Nếu user đã login và có rememberMe, auto-navigate đến Main
+    if (user && rememberMe) {
+      return "Main";
+    }
+    // Ngược lại, hiển thị BeginScreen
+    return "BeginScreen";
+  };
 
   useEffect(() => {
     const handleDeepLink = (url: string | null) => {
@@ -140,7 +160,7 @@ const RootStackNavigator = () => {
       ref={navigationRef}
       fallback={<Text>Loading...</Text>}
     >
-      <Stack.Navigator initialRouteName="BeginScreen">
+      <Stack.Navigator initialRouteName={getInitialRouteName()}>
         {/* Các màn hình Auth & Onboarding */}
         <Stack.Screen
           name="BeginScreen"
@@ -443,6 +463,53 @@ const RootStackNavigator = () => {
         <Stack.Screen
           name="WhoIsNextMarried"
           component={WhoIsNextMarriedScreen}
+          options={{ headerShown: false }}
+        />
+        {/* Community Screens */}
+        <Stack.Screen
+          name="CommunityScreen"
+          component={CommunityScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PostDetailScreen"
+          component={PostDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CreatePostScreen"
+          component={CreatePostScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TopicGroupsScreen"
+          component={TopicGroupsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TopicGroupDetailScreen"
+          component={TopicGroupDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="InspireBoardScreen"
+          component={InspireBoardScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CommunityAlbumsScreen"
+          component={CommunityAlbumsScreen}
+          options={{ headerShown: false }}
+        />
+        {/* Guest Management Screens */}
+        <Stack.Screen
+          name="GuestManagementScreen"
+          component={GuestManagementScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="GuestDetailScreen"
+          component={GuestDetailScreen}
           options={{ headerShown: false }}
         />
         {/* MoodBoards Screen */}

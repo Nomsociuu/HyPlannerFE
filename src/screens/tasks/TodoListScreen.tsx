@@ -9,13 +9,19 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ArrowLeft } from "lucide-react-native";
+import {
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
+  spacing,
+} from "../../../assets/styles/utils/responsive";
 
 const TodoListScreen = () => {
   const navigation = useNavigation();
 
   return (
     <SafeAreaView style={todoStyles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" translucent={false} />
       {/* Header tùy chỉnh */}
       <View style={todoStyles.headerContainer}>
         <TouchableOpacity
@@ -38,17 +44,16 @@ const TodoListScreen = () => {
 
 const todoStyles = StyleSheet.create({
   safeArea: {
-    paddingTop: 20,
+    paddingTop: responsiveHeight(20),
     flex: 1,
     backgroundColor: "#f0f2f5",
   },
-  // Style cho header tùy chỉnh
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    height: 60, // Chiều cao giống header mặc định
+    paddingHorizontal: responsiveWidth(20),
+    height: responsiveHeight(72),
     backgroundColor: "#fff",
     elevation: 1,
     shadowOpacity: 0.1,
@@ -58,12 +63,12 @@ const todoStyles = StyleSheet.create({
     },
   },
   backButton: {
-    padding: 5,
-    width: 40, // Đảm bảo vùng bấm đủ lớn
+    padding: responsiveWidth(8),
+    width: responsiveWidth(44),
     alignItems: "flex-start",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: responsiveFont(24),
     fontWeight: "bold",
     color: "#d35a68",
     fontFamily: "serif",
@@ -76,4 +81,3 @@ const todoStyles = StyleSheet.create({
 });
 
 export default TodoListScreen;
-

@@ -16,6 +16,9 @@ import {
   getItemWidth,
   getItemHeight,
   getGridGap,
+  responsiveFont,
+  responsiveWidth,
+  responsiveHeight,
 } from "../../assets/styles/utils/responsive";
 
 const { width } = Dimensions.get("window");
@@ -95,33 +98,33 @@ const WeddingItemCard: React.FC<WeddingItemCardProps> = ({
 const styles = StyleSheet.create({
   itemContainer: {
     width: getItemWidth(),
-    marginBottom: 24,
+    marginBottom: responsiveHeight(24),
     alignItems: "center",
   },
   imageContainer: {
-    width: getItemWidth() - 12, // 12px smaller than container for padding
+    width: getItemWidth() - responsiveWidth(12),
     height: getItemHeight(),
     position: "relative",
-    borderRadius: 8,
+    borderRadius: responsiveWidth(8),
     overflow: "hidden",
-    marginBottom: 8,
+    marginBottom: responsiveHeight(8),
   },
   image: {
-    width: getItemWidth() - 12,
+    width: getItemWidth() - responsiveWidth(12),
     height: getItemHeight(),
-    borderRadius: 8,
+    borderRadius: responsiveWidth(8),
   },
   pinIconContainer: {
     position: "absolute",
-    right: 3,
-    top: getItemHeight() - 25, // Position relative to image height
+    right: responsiveWidth(3),
+    top: getItemHeight() - responsiveHeight(25),
     zIndex: 1,
   },
   pinButton: {
-    width: 20,
-    height: 20,
+    width: responsiveWidth(20),
+    height: responsiveWidth(20),
     backgroundColor: "#F9A8D4",
-    borderRadius: 10,
+    borderRadius: responsiveWidth(10),
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -138,14 +141,14 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 4,
+    borderRadius: responsiveWidth(10),
+    padding: responsiveWidth(4),
   },
   pinIcon: {
     transform: [{ rotate: "45deg" }],
   },
   itemName: {
-    fontSize: 12,
+    fontSize: responsiveFont(12),
     fontFamily: fonts.montserratMedium,
     color: "#1f2937",
     textAlign: "center",
