@@ -2,7 +2,7 @@
 
 import { type NavigatorScreenParams } from "@react-navigation/native";
 import { Member } from "../store/weddingEventSlice"; // Giả sử Member được export từ đây
-import { Template } from "../screens/InvitationLetterScreen"; // Giả sử Template được export từ đây
+import { Template } from "../screens/invitation/InvitationLetterScreen"; // Giả sử Template được export từ đây
 
 // Type này có thể cần được định nghĩa đầy đủ hơn hoặc import từ nơi khác
 export type LoveStoryItem = {
@@ -74,6 +74,7 @@ export type RootStackParamList = {
     currentValue: string;
     field: string;
   };
+  EditWeddingInfo: { eventId: string };
   InvitationLettersScreen: undefined;
   CreateWeddingSite: { template: Template };
   WebsiteManagement: { invitation: InvitationData };
@@ -97,6 +98,7 @@ export type RootStackParamList = {
   EditTask: { taskId: string; eventId: string };
   AddBudget: { groupActivityId: string; eventId: string };
   EditBudget: { activityId: string; eventId: string };
+  EditBudgetGroupScreen: { eventId: string };
   AddMember: {
     existingMembers?: Member[];
     onSelect?: (selectedMembers: Member[]) => void;
@@ -119,7 +121,9 @@ export type RootStackParamList = {
   AccessoriesHairClip: undefined;
   AccessoriesCrown: undefined;
   Album: undefined;
-  AlbumDetail: { album: any };
+  AlbumDetail: { album?: any; albumId?: string; source?: "my" | "community" };
+  TestCreateAlbum: undefined;
+  AlbumWizardComplete: undefined;
   GroomSuit: undefined;
   GroomMaterial: undefined;
   GroomColor: undefined;
@@ -132,13 +136,29 @@ export type RootStackParamList = {
   BrideHeadscarf: undefined;
   GroomEngagementOutfit: undefined;
   GroomEngagementAccessories: undefined;
-  WhoIsNextMarried: {member: any[], creatorId?: string};
+  WhoIsNextMarried: { member: any[]; creatorId?: string };
+  MoodBoards: undefined;
+  Notifications: undefined;
+  CommunityScreen: undefined;
+  PostDetailScreen: { postId: string };
+  CreatePostScreen: { postId?: string }; // Optional: for editing existing post
+  TopicGroupsScreen: undefined;
+  TopicGroupDetailScreen: { groupId: string };
+  InspireBoardScreen: undefined;
+  CommunityAlbumsScreen: undefined;
+  SavedPostsScreen: undefined;
+  SavedAlbumsScreen: undefined;
+  CreateAlbumScreen: undefined;
+  GuestManagementScreen: undefined;
+  GuestDetailScreen: { guestId: string };
+  NotificationListScreen: { weddingEventId: string };
 };
 
 // Định nghĩa các màn hình trong Tab Navigator
 export type MainTabParamList = {
   Home: undefined;
   WebsiteTab: undefined;
+  Community: undefined;
   MoodBoard: undefined;
   ProfileTab: undefined;
 };
